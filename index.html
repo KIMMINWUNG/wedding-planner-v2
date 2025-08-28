@@ -147,13 +147,11 @@
         let currentPhotoIndex = 0;
         let isFirebaseInitialized = false;
 
-        // --- [NEW] 사진첩 상태 관리 변수 ---
+        // --- 사진첩 상태 관리 변수 ---
         let photoViewMode = 'folders'; // 'folders' 또는 'single_folder'
         let currentFolderName = null;
         let isDeleteSelectionMode = false;
         let photosSelectedForDeletion = new Set();
-        let longPressTimer = null;
-
 
         const formatNumberWithCommas = (number) => number?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") || '';
         const parseFormattedNumber = (str) => parseInt(String(str).replace(/,/g, ''), 10) || 0;
@@ -252,10 +250,9 @@
         }
 
         window.changeTab = (tabName) => {
-            // 사진첩 탭에서 다른 탭으로 이동 시, 삭제 모드 및 폴더 뷰 초기화
             if (photoViewMode !== 'folders' || isDeleteSelectionMode) {
-                exitDeleteMode(false); // 렌더링 없이 상태만 초기화
-                navigateBackToFolders(false); // 렌더링 없이 상태만 초기화
+                exitDeleteMode(false);
+                navigateBackToFolders(false);
             }
 
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
@@ -465,30 +462,28 @@
         
         window.editBudgetItem = (id) => { const itemToEdit = allBudgetItems.find(item => item.id === id); if (itemToEdit) openModal('budget', 'edit', itemToEdit); };
         
-        // --- [UPDATED] Lightbox Swipe Logic ---
         const lightbox = document.getElementById('lightbox');
         let touchStartX = 0;
         const handleTouchStart = (e) => { touchStartX = e.changedTouches[0].screenX; };
         const handleTouchEnd = (e) => {
             let touchEndX = e.changedTouches[0].screenX;
-            if (touchStartX - touchEndX > 50) { // Swiped left
+            if (touchStartX - touchEndX > 50) {
                 showNextPhoto();
-            } else if (touchEndX - touchStartX > 50) { // Swiped right
+            } else if (touchEndX - touchStartX > 50) {
                 showPrevPhoto();
             }
         };
 
         window.openLightbox = (index) => {
-            if (isDeleteSelectionMode) return; // 삭제 모드일 때는 라이트박스 열지 않음
+            if (isDeleteSelectionMode) return;
             
-            // 현재 보고 있는 폴더의 사진 목록을 기준으로 인덱스 계산
             const currentVisiblePhotos = (photoViewMode === 'single_folder' && currentFolderName)
                 ? allPhotos.filter(p => (p.folderName || '기타') === currentFolderName)
                 : allPhotos;
 
             const photoToOpen = allPhotos[index];
             currentPhotoIndex = currentVisiblePhotos.findIndex(p => p.id === photoToOpen.id);
-            if (currentPhotoIndex === -1) currentPhotoIndex = 0; // Fallback
+            if (currentPhotoIndex === -1) currentPhotoIndex = 0;
 
             document.getElementById('lightbox-img').src = currentVisiblePhotos[currentPhotoIndex].url;
             lightbox.classList.remove('hidden');
@@ -535,7 +530,6 @@
             else if (tabName === 'photos') {
                 container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md">
                     <div id="photo-header" class="flex justify-between items-center mb-4">
-                        <!-- Photo header content will be dynamically generated -->
                     </div>
                     <div id="photo-gallery-container" class="space-y-8"></div>
                 </div>`;
@@ -676,15 +670,15 @@
             document.getElementById('bride-guest-count').textContent = counts.bride;
         };
 
-        // --- [NEW] 사진첩 관련 함수들 ---
+        // --- 사진첩 관련 함수들 ---
         
-        // 사진첩 헤더(제목, 버튼) 업데이트
         function updatePhotoHeader() {
             const header = document.getElementById('photo-header');
             if (!header) return;
             
             let title = '우리의 추억';
-            let buttons = `<button id="add-photo-btn" onclick="openModal('photo', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-upload mr-1"></i>사진 올리기</button>`;
+            let buttons = `<button onclick="enterDeleteMode()" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 text-sm"><i class="fas fa-trash-alt mr-1"></i>삭제</button>
+                           <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm ml-2"><i class="fas fa-upload mr-1"></i>사진 올리기</button>`;
 
             if (isDeleteSelectionMode) {
                 const selectedCount = photosSelectedForDeletion.size;
@@ -694,41 +688,37 @@
             } else if (photoViewMode === 'single_folder') {
                 title = currentFolderName;
                 buttons = `<button onclick="navigateBackToFolders(true)" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 text-sm"><i class="fas fa-arrow-left mr-1"></i>뒤로</button>
+                           <button onclick="enterDeleteMode()" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 text-sm ml-2"><i class="fas fa-trash-alt mr-1"></i>삭제</button>
                            <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm ml-2"><i class="fas fa-upload mr-1"></i>사진 올리기</button>`;
             }
 
             header.innerHTML = `<h2 class="text-xl font-bold text-pink-500">${title}</h2><div class="space-x-2">${buttons}</div>`;
         }
 
-        // 특정 폴더로 이동
         window.navigateToFolder = (folderName) => {
             photoViewMode = 'single_folder';
             currentFolderName = folderName;
             renderPhotos(allPhotos);
         };
 
-        // 전체 폴더 보기로 돌아가기
         window.navigateBackToFolders = (render = true) => {
             photoViewMode = 'folders';
             currentFolderName = null;
             if (render) renderPhotos(allPhotos);
         };
 
-        // 삭제 모드 진입
-        window.enterDeleteMode = (photoId) => {
+        window.enterDeleteMode = () => {
             isDeleteSelectionMode = true;
-            photosSelectedForDeletion.add(photoId);
+            photosSelectedForDeletion.clear();
             renderPhotos(allPhotos);
         };
 
-        // 삭제 모드 종료
         window.exitDeleteMode = (render = true) => {
             isDeleteSelectionMode = false;
             photosSelectedForDeletion.clear();
             if (render) renderPhotos(allPhotos);
         };
 
-        // 사진 선택/해제
         window.togglePhotoSelection = (photoId) => {
             const photoDiv = document.querySelector(`[data-photo-id="${photoId}"]`);
             if (photosSelectedForDeletion.has(photoId)) {
@@ -744,7 +734,6 @@
             updatePhotoHeader();
         };
 
-        // 선택된 사진들 삭제
         window.deleteSelectedPhotos = async () => {
             const count = photosSelectedForDeletion.size;
             if (count === 0) return;
@@ -758,9 +747,7 @@
                 photosSelectedForDeletion.forEach(id => {
                     const photoToDelete = allPhotos.find(p => p.id === id);
                     if (photoToDelete) {
-                        // Firestore 문서 삭제 배치에 추가
                         batch.delete(doc(db, `artifacts/${appId}/public/data/photos`, id));
-                        // Storage 파일 삭제 프로미스 추가
                         if (photoToDelete.storagePath) {
                             deletePromises.push(deleteObject(ref(storage, photoToDelete.storagePath)));
                         }
@@ -768,42 +755,26 @@
                 });
 
                 try {
-                    await batch.commit(); // Firestore 일괄 삭제 실행
-                    await Promise.all(deletePromises); // Storage 파일들 삭제 실행
+                    await batch.commit();
+                    await Promise.all(deletePromises);
                     console.log(`${count} photos deleted successfully.`);
                 } catch (error) {
                     console.error("Error deleting selected photos:", error);
                 } finally {
-                    exitDeleteMode(true); // 삭제 후 모드 종료 및 새로고침
+                    exitDeleteMode(true);
                 }
             });
         };
         
-        // 사진 클릭/터치 이벤트 핸들러
         const handlePhotoInteraction = (e, photo, originalIndex) => {
-            e.preventDefault(); // 기본 동작 방지
+            e.preventDefault();
             if (isDeleteSelectionMode) {
                 togglePhotoSelection(photo.id);
                 return;
             }
-            // 일반 클릭/탭 시 라이트박스 열기
             openLightbox(originalIndex);
         };
 
-        const handlePhotoPress = (e, photo) => {
-             e.preventDefault();
-             clearTimeout(longPressTimer); // 기존 타이머 제거
-             longPressTimer = setTimeout(() => {
-                 enterDeleteMode(photo.id);
-             }, 700); // 0.7초 누르면 삭제 모드 진입
-        };
-
-        const handlePhotoRelease = () => {
-            clearTimeout(longPressTimer);
-        };
-
-
-        // 사진첩 뷰 렌더링 라우터
         window.renderPhotos = function(items) {
             const container = document.getElementById('photo-gallery-container');
             if (!container) return;
@@ -823,7 +794,6 @@
             }
         };
 
-        // 전체 폴더 미리보기 뷰
         function renderAllFoldersView(items, container) {
             const groupedByFolder = items.reduce((acc, photo) => { const folder = photo.folderName || '기타'; if (!acc[folder]) acc[folder] = []; acc[folder].push(photo); return acc; }, {});
             const sortedFolders = Object.keys(groupedByFolder).sort((a, b) => { if (a === '기타') return 1; if (b === '기타') return -1; return a.localeCompare(b); });
@@ -850,30 +820,32 @@
             });
         }
 
-        // 단일 폴더 전체 사진 보기 뷰
         function renderSingleFolderView(items, container) {
             const photosInFolder = items.filter(p => (p.folderName || '기타') === currentFolderName);
             const grid = document.createElement('div');
             grid.className = 'grid grid-cols-3 sm:grid-cols-4 gap-2';
 
             if(photosInFolder.length === 0) {
-                navigateBackToFolders(true); // 사진이 없으면 폴더 뷰로 돌아감
+                navigateBackToFolders(true);
                 return;
             }
 
             photosInFolder.forEach(photo => {
                 const originalIndex = allPhotos.findIndex(p => p.id === photo.id);
                 const photoWrapper = document.createElement('div');
-                photoWrapper.className = "relative aspect-square bg-gray-100 rounded-lg overflow-hidden group";
+                photoWrapper.className = "relative aspect-square bg-gray-100 rounded-lg overflow-hidden group cursor-pointer";
                 photoWrapper.dataset.photoId = photo.id;
                 
                 photoWrapper.innerHTML = `<img src="${photo.url}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x400/FFFBF7/D98BA0?text=Error';">`;
                 
-                // 이벤트 리스너 추가
+                if (isDeleteSelectionMode && photosSelectedForDeletion.has(photo.id)) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'photo-selection-overlay';
+                    overlay.innerHTML = `<i class="fas fa-check-circle text-4xl text-pink-500"></i>`;
+                    photoWrapper.appendChild(overlay);
+                }
+
                 photoWrapper.addEventListener('click', (e) => handlePhotoInteraction(e, photo, originalIndex));
-                photoWrapper.addEventListener('touchstart', (e) => handlePhotoPress(e, photo), { passive: true });
-                photoWrapper.addEventListener('touchend', handlePhotoRelease);
-                photoWrapper.addEventListener('touchcancel', handlePhotoRelease);
                 
                 grid.appendChild(photoWrapper);
             });
