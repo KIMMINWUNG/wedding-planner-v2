@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>민웅 ❤️ 지은 웨딩 플래너</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #FFFBF7; }
+        .font-handwriting { font-family: 'Dancing Script', cursive; }
+        .tab-button.active { border-bottom-color: #D98BA0; color: #D98BA0; font-weight: 700; }
+        .completed { text-decoration: line-through; color: #9ca3af; }
+        .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background-color: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); width: 90%; max-width: 500px; }
+        .draggable { cursor: grab; }
+        .dragging { opacity: 0.5; background: #d98ba040; }
+        .item-content { cursor: pointer; }
+        .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .lightbox-content { max-width: 90vw; max-height: 85vh; }
+        .lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; }
+        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 30px; cursor: pointer; padding: 16px; user-select: none; }
+        .lightbox-prev { left: 10px; }
+        .lightbox-next { right: 10px; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        }
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Password Gate -->
+    <div id="password-gate" class="min-h-screen flex items-center justify-center bg-[#FFFBF7]">
+        <div class="bg-white p-8 rounded-lg shadow-lg text-center w-full max-w-sm">
+            <h2 class="font-handwriting text-4xl text-pink-500 mb-4">Minwung & Jieun</h2>
+            <p class="text-gray-600 mb-6">우리의 웨딩 플래너</p>
+            <input type="password" id="password-input" class="w-full p-3 border rounded-lg text-center" placeholder="비밀번호">
+            <p id="password-error" class="text-red-500 text-sm mt-2 h-5"></p>
+            <button onclick="checkPassword()" class="w-full bg-pink-500 text-white p-3 rounded-lg hover:bg-pink-600 mt-4">입장하기</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="hidden">
+        <div class="container mx-auto p-4 max-w-4xl">
+            <!-- Header -->
+            <header class="text-center mb-6">
+                <h1 class="font-handwriting text-5xl md:text-6xl font-bold text-pink-500">Minwung & Jieun</h1>
+                <p class="text-md text-gray-500 mt-2">우리가 함께 만드는 결혼 이야기</p>
+                <div class="mt-4 text-center space-y-2">
+                    <div id="wedding-date-container" class="relative inline-block group cursor-pointer">
+                        <div id="d-day-counter" class="text-xl font-semibold bg-white p-3 rounded-lg shadow-md">...</div>
+                        <div id="wedding-date-display" class="text-xs text-gray-500 mt-1"></div>
+                        <input type="hidden" id="wedding-date-picker">
+                    </div>
+                    <div id="days-together-counter" class="text-sm text-gray-600">...</div>
+                </div>
+            </header>
+
+            <!-- Tabs -->
+            <div class="mb-6 border-b border-gray-200 sticky top-0 bg-[#FFFBF7] z-10">
+                <nav class="flex justify-around" aria-label="Tabs">
+                    <button onclick="changeTab('checklist')" class="tab-button active w-full text-center py-3 px-1 border-b-2 font-medium text-sm"><i class="fas fa-check-square mr-1"></i>체크리스트</button>
+                    <button onclick="changeTab('budget')" class="tab-button w-full text-center py-3 px-1 border-b-2 font-medium text-sm"><i class="fas fa-coins mr-1"></i>예산 관리</button>
+                    <button onclick="changeTab('guests')" class="tab-button w-full text-center py-3 px-1 border-b-2 font-medium text-sm"><i class="fas fa-users mr-1"></i>하객 관리</button>
+                    <button onclick="changeTab('photos')" class="tab-button w-full text-center py-3 px-1 border-b-2 font-medium text-sm"><i class="fas fa-images mr-1"></i>사진첩</button>
+                </nav>
+            </div>
+
+            <!-- Content Sections -->
+            <main>
+                <div id="checklist" class="tab-content"></div>
+                <div id="budget" class="tab-content hidden"></div>
+                <div id="guests" class="tab-content hidden"></div>
+                <div id="photos" class="tab-content hidden"></div>
+            </main>
+        </div>
+
+        <!-- Modal -->
+        <div id="itemModal" class="modal-backdrop hidden">
+            <div class="modal-content">
+                <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
+                <form id="modal-form" class="space-y-4"></form>
+                <div class="flex justify-end mt-6 space-x-2">
+                    <button onclick="closeModal()" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400">취소</button>
+                    <button onclick="handleModalSave()" class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600">저장</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Custom Confirm Modal -->
+        <div id="confirmModal" class="modal-backdrop hidden">
+            <div class="modal-content">
+                <h3 id="confirm-title" class="text-lg font-bold mb-4">확인</h3>
+                <p id="confirm-message">이 항목을 정말로 삭제하시겠습니까?</p>
+                <div class="flex justify-end mt-6 space-x-2">
+                    <button id="confirm-cancel" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400">취소</button>
+                    <button id="confirm-ok" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">삭제</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lightbox -->
+        <div id="lightbox" class="lightbox hidden">
+            <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+            <img class="lightbox-content" id="lightbox-img">
+            <a class="lightbox-prev" onclick="showPrevPhoto()">&#10094;</a>
+            <a class="lightbox-next" onclick="showNextPhoto()">&#10095;</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script type="module">
+        // Firebase SDK import
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, addDoc, deleteDoc, updateDoc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // --- 1. Firebase 설정 ---
+        // 이 부분은 2단계에서 생성한 자신의 Firebase 설정으로 교체해주세요.
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const appId = 'wedding-planner-v2'; // 앱 고유 ID (변경 가능)
+
+        let app, auth, db, storage, userId, currentModal = {};
+        let weddingDate = new Date('2026-04-04T13:20:00');
+        let allPhotos = [], allBudgetItems = [];
+        let currentPhotoIndex = 0;
+        let isFirebaseInitialized = false;
+
+        const formatNumberWithCommas = (number) => number?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") || '';
+        const parseFormattedNumber = (str) => parseInt(String(str).replace(/,/g, ''), 10) || 0;
+        window.handleNumberInput = (e) => {
+            const input = e.target;
+            input.value = formatNumberWithCommas(parseFormattedNumber(input.value));
+        };
+
+        const correctPassword = '0719';
+        window.checkPassword = function() {
+            const input = document.getElementById('password-input');
+            if (input.value === correctPassword) {
+                document.getElementById('password-gate').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                sessionStorage.setItem('weddingPlannerAuthenticated', 'true');
+                if (!isFirebaseInitialized) {
+                    initializeFirebase();
+                }
+            } else {
+                document.getElementById('password-error').textContent = '비밀번호가 틀렸습니다.';
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        async function initializeFirebase() {
+            if (isFirebaseInitialized) return;
+            if (!firebaseConfig || firebaseConfig.apiKey === "YOUR_API_KEY") {
+                console.error("Firebase 설정이 올바르지 않습니다. 1단계에서 받은 설정으로 교체해주세요.");
+                const mainContent = document.getElementById('main-content');
+                mainContent.innerHTML = `<div class="text-center p-8 bg-red-100 text-red-700 rounded-lg"><h2 class="font-bold text-xl">데이터베이스 연결 실패</h2><p class="mt-2">Firebase 설정 정보가 올바르지 않아 앱을 실행할 수 없습니다.</p></div>`;
+                return;
+            }
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                storage = getStorage(app);
+                setLogLevel('debug');
+                isFirebaseInitialized = true;
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Authentication ready. User ID:", userId);
+                        initializeDatePicker();
+                        setupSnapshots();
+                    } else {
+                        userId = null;
+                        console.log("User is signed out.");
+                    }
+                });
+                await signInAnonymously(auth);
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                 const mainContent = document.getElementById('main-content');
+                mainContent.innerHTML = `<div class="text-center p-8 bg-red-100 text-red-700 rounded-lg"><h2 class="font-bold text-xl">데이터베이스 초기화 오류</h2><p class="mt-2">오류: ${error.message}</p></div>`;
+            }
+        }
+
+        function initializeDatePicker() {
+             flatpickr("#wedding-date-picker", {
+                enableTime: true, dateFormat: "Y-m-d H:i", defaultDate: weddingDate, wrap: true,
+                onChange: async (selectedDates) => { 
+                    if(db && userId) {
+                        await setDoc(doc(db, `artifacts/${appId}/public/data/settings`, "main"), { weddingDate: selectedDates[0] }); 
+                    }
+                }
+            }).config.appendTo(document.getElementById('wedding-date-container'));
+        }
+
+        window.changeTab = (tabName) => {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            const container = document.getElementById(tabName);
+            container.classList.remove('hidden');
+            if (!container.innerHTML.trim()) loadTabContent(tabName);
+            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+            document.querySelector(`button[onclick="changeTab('${tabName}')"]`).classList.add('active');
+        };
+
+        const updateDday = (date) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const weddingDay = new Date(date);
+            weddingDay.setHours(0, 0, 0, 0);
+            const diffTime = weddingDay - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            document.getElementById('d-day-counter').innerHTML = diffDays > 0 ? `💍 Wedding D-${diffDays}` : (diffDays === 0 ? `❤️ Happy Wedding Day!` : `🎉 Married for ${Math.abs(diffDays)} days`);
+            document.getElementById('wedding-date-display').textContent = date.toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        };
+
+        const updateDaysTogether = () => {
+            const metDate = new Date('2025-07-19T00:00:00');
+            const diffDays = Math.floor((new Date() - metDate) / (1000 * 60 * 60 * 24));
+            if (diffDays >= 0) {
+                document.getElementById('days-together-counter').innerHTML = `함께한 지 <span class="font-semibold text-pink-500">${diffDays + 1}</span>일째`;
+            }
+        };
+
+        window.openModal = (type, mode, item = {}) => {
+            currentModal = { type, mode, item };
+            const modal = document.getElementById('itemModal');
+            const title = document.getElementById('modal-title');
+            const form = document.getElementById('modal-form');
+            form.innerHTML = '';
+            const isEdit = mode === 'edit';
+
+            if (type === 'checklist') {
+                title.textContent = isEdit ? '체크리스트 수정' : '새 체크리스트 항목';
+                form.innerHTML = `<input type="hidden" id="itemId" value="${item.id || ''}"><div><label class="block text-sm font-medium">항목 내용</label><input type="text" id="checklistItemText" class="mt-1 w-full p-2 border rounded" value="${item.text || ''}" required></div><div><label class="block text-sm font-medium">카테고리</label><input type="text" id="checklistItemCategory" value="${item.category || ''}" class="mt-1 w-full p-2 border rounded"></div><div><label class="block text-sm font-medium">날짜/메모</label><input type="text" id="checklistItemDate" value="${item.date || ''}" class="mt-1 w-full p-2 border rounded"></div>`;
+                flatpickr("#checklistItemDate", { enableTime: true, dateFormat: "Y-m-d H:i" });
+            } else if (type === 'budget') {
+                title.textContent = isEdit ? '예산 항목 수정' : '새 예산 항목';
+                form.innerHTML = `<input type="hidden" id="itemId" value="${item.id || ''}"><div><label class="block text-sm font-medium">항목</label><input type="text" id="budgetItem" value="${item.item || ''}" class="mt-1 w-full p-2 border rounded" required></div><div><label class="block text-sm font-medium text-blue-600">예상 금액</label><div class="mt-1 flex items-center"><button type="button" onclick="adjustBudget('budgetEstimated', -10000)" class="px-3 py-2 border rounded-l-md bg-gray-50">-</button><input type="text" inputmode="numeric" id="budgetEstimated" value="${formatNumberWithCommas(item.estimatedAmount || '')}" oninput="handleNumberInput(event)" class="w-full p-2 border-t border-b text-center" placeholder="총 예상 금액"><button type="button" onclick="adjustBudget('budgetEstimated', 10000)" class="px-3 py-2 border rounded-r-md bg-gray-50">+</button></div></div><hr class="my-3"><p class="text-sm font-medium text-pink-600">실제 지출</p><div><label class="block text-xs font-medium">실제 총액</label><div class="mt-1 flex items-center"><button type="button" onclick="adjustBudget('budgetTotal', -10000)" class="px-3 py-2 border rounded-l-md bg-gray-50">-</button><input type="text" inputmode="numeric" id="budgetTotal" value="${formatNumberWithCommas(item.totalAmount || 0)}" oninput="handleNumberInput(event)" class="w-full p-2 border-t border-b text-center"><button type="button" onclick="adjustBudget('budgetTotal', 10000)" class="px-3 py-2 border rounded-r-md bg-gray-50">+</button></div></div><div><label class="block text-xs font-medium">계약금</label><div class="mt-1 flex items-center"><button type="button" onclick="adjustBudget('budgetDeposit', -10000)" class="px-3 py-2 border rounded-l-md bg-gray-50">-</button><input type="text" inputmode="numeric" id="budgetDeposit" value="${formatNumberWithCommas(item.deposit || 0)}" oninput="handleNumberInput(event)" class="w-full p-2 border-t border-b text-center"><button type="button" onclick="adjustBudget('budgetDeposit', 10000)" class="px-3 py-2 border rounded-r-md bg-gray-50">+</button></div></div><div><label class="block text-xs font-medium">지불</label><select id="budgetPayer" class="mt-1 w-full p-2 border rounded"><option value="joint">공동</option><option value="groom">민웅</option><option value="bride">지은</option></select></div>`;
+                if(isEdit) document.getElementById('budgetPayer').value = item.payer;
+            } else if (type === 'guest') {
+                title.textContent = isEdit ? '하객 정보 수정' : '새 하객 추가';
+                form.innerHTML = `<input type="hidden" id="itemId" value="${item.id || ''}"><div><label class="block text-sm font-medium">이름</label><input type="text" id="guestName" value="${item.name || ''}" class="mt-1 w-full p-2 border rounded" required></div><div><label class="block text-sm font-medium">소속</label><select id="guestSide" class="mt-1 w-full p-2 border rounded"><option value="groom">민웅</option><option value="bride">지은</option></select></div><div><label class="block text-sm font-medium">관계</label><select id="guestRelation" class="mt-1 w-full p-2 border rounded"><option value="family">가족</option><option value="friend">친구</option><option value="coworker">직장동료</option><option value="etc">기타</option></select></div>`;
+                if(isEdit) { document.getElementById('guestSide').value = item.side; document.getElementById('guestRelation').value = item.relation; }
+            } else if (type === 'photo') {
+                title.textContent = '사진 올리기';
+                const existingFolders = [...new Set(allPhotos.map(p => p.folderName).filter(Boolean))];
+                const folderOptions = existingFolders.map(f => `<option value="${f}">${f}</option>`).join('');
+                form.innerHTML = `<div><label class="block text-sm font-medium">폴더 선택</label><select id="photoFolderSelect" class="mt-1 w-full p-2 border rounded"><option value="">기타</option>${folderOptions}<option value="_new_">-- 새 폴더 만들기 --</option></select></div><div id="newFolderInputContainer" class="hidden"><label class="block text-sm font-medium">새 폴더 이름</label><input type="text" id="newFolderName" class="mt-1 w-full p-2 border rounded"></div><div><label class="block text-sm font-medium">사진 파일</label><input type="file" id="photoFileInput" class="mt-1 w-full" accept="image/*" required></div><div id="photo-upload-progress" class="text-sm text-gray-500 hidden"></div>`;
+                document.getElementById('photoFolderSelect').addEventListener('change', (e) => {
+                    document.getElementById('newFolderInputContainer').classList.toggle('hidden', e.target.value !== '_new_');
+                });
+            }
+            modal.classList.remove('hidden');
+        };
+        window.closeModal = () => document.getElementById('itemModal').classList.add('hidden');
+
+        window.adjustBudget = (inputId, amount) => {
+            const input = document.getElementById(inputId);
+            if (input) { 
+                let currentValue = parseFormattedNumber(input.value); 
+                currentValue += amount; 
+                if (currentValue < 0) currentValue = 0; 
+                input.value = formatNumberWithCommas(currentValue); 
+            }
+        };
+        
+        function showConfirm(message, onConfirm) {
+            const confirmModal = document.getElementById('confirmModal');
+            document.getElementById('confirm-message').textContent = message;
+            confirmModal.classList.remove('hidden');
+            const okBtn = document.getElementById('confirm-ok');
+            const cancelBtn = document.getElementById('confirm-cancel');
+            const close = () => {
+                confirmModal.classList.add('hidden');
+                okBtn.onclick = null;
+                cancelBtn.onclick = null;
+            };
+            okBtn.onclick = () => {
+                close();
+                onConfirm();
+            };
+            cancelBtn.onclick = close;
+        }
+
+        window.handleModalSave = () => { currentModal.type === 'photo' ? handlePhotoUpload() : handleFormSubmit(); }
+
+        async function handlePhotoUpload() {
+            if (!db || !storage || !userId) { console.error("DB/Storage not ready or user not authenticated."); return; }
+            const fileInput = document.getElementById('photoFileInput');
+            const file = fileInput.files[0];
+            if (!file) { showConfirm("사진 파일을 선택해주세요.", () => {}); return; }
+            
+            let folderName = document.getElementById('photoFolderSelect').value;
+            if (folderName === '_new_') {
+                folderName = document.getElementById('newFolderName').value.trim();
+                if (!folderName) { showConfirm("새 폴더 이름을 입력해주세요.", () => {}); return; }
+            }
+            const progressDiv = document.getElementById('photo-upload-progress');
+            progressDiv.textContent = '업로드 중...'; progressDiv.classList.remove('hidden');
+
+            const storageRef = ref(storage, `photos/${Date.now()}_${file.name}`);
+            try {
+                const snapshot = await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(snapshot.ref);
+                await addDoc(collection(db, `artifacts/${appId}/public/data/photos`), { url: downloadURL, storagePath: snapshot.ref.fullPath, folderName: folderName || null, createdAt: new Date() });
+                progressDiv.textContent = '업로드 완료!';
+                setTimeout(() => closeModal(), 1000);
+            } catch (error) { 
+                console.error("Upload failed", error); 
+                progressDiv.textContent = `업로드 실패: ${error.message}`;
+            }
+        }
+
+        window.handleFormSubmit = async () => {
+            if (!db || !userId) { alert("데이터베이스 연결이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요."); return; }
+            const { type, mode } = currentModal;
+            const id = document.getElementById('itemId').value;
+            let data = {};
+            try {
+                if (type === 'checklist') {
+                    data = { text: document.getElementById('checklistItemText').value, category: document.getElementById('checklistItemCategory').value || '기타', date: document.getElementById('checklistItemDate').value };
+                } else if (type === 'budget') {
+                    data = { item: document.getElementById('budgetItem').value, estimatedAmount: parseFormattedNumber(document.getElementById('budgetEstimated').value), totalAmount: parseFormattedNumber(document.getElementById('budgetTotal').value), deposit: parseFormattedNumber(document.getElementById('budgetDeposit').value), payer: document.getElementById('budgetPayer').value };
+                } else if (type === 'guest') {
+                    data = { name: document.getElementById('guestName').value, side: document.getElementById('guestSide').value, relation: document.getElementById('guestRelation').value };
+                }
+
+                const collectionName = type === 'guest' ? 'guests' : `${type}s`;
+
+                if (mode === 'edit' && id) {
+                    const docToUpdateRef = doc(db, `artifacts/${appId}/public/data/${collectionName}`, id);
+                    await updateDoc(docToUpdateRef, data);
+                } else {
+                    const collectionRef = collection(db, `artifacts/${appId}/public/data/${collectionName}`);
+                    if (type === 'checklist') data.order = Date.now();
+                    data.createdAt = new Date();
+                    await addDoc(collectionRef, data);
+                }
+            } catch (e) { 
+                console.error("Error saving document: ", e); 
+            }
+            closeModal();
+        };
+        
+        window.deleteItem = async (collectionName, id) => {
+            showConfirm('정말로 삭제하시겠습니까?', async () => {
+                if (!db || !userId) { console.error("DB not ready or user not authenticated."); return; }
+                try {
+                    if (collectionName === 'photos') {
+                        const photoToDelete = allPhotos.find(p => p.id === id);
+                        if (photoToDelete && photoToDelete.storagePath) {
+                            await deleteObject(ref(storage, photoToDelete.storagePath));
+                        }
+                    }
+                    await deleteDoc(doc(db, `artifacts/${appId}/public/data/${collectionName}`, id));
+                } catch (error) {
+                    console.error("Error deleting item:", error);
+                }
+            });
+        };
+        
+        window.editBudgetItem = (id) => { const itemToEdit = allBudgetItems.find(item => item.id === id); if (itemToEdit) openModal('budget', 'edit', itemToEdit); };
+        
+        window.openLightbox = (index) => { currentPhotoIndex = index; document.getElementById('lightbox-img').src = allPhotos[index].url; document.getElementById('lightbox').classList.remove('hidden'); };
+        window.closeLightbox = () => document.getElementById('lightbox').classList.add('hidden');
+        window.showNextPhoto = () => { currentPhotoIndex = (currentPhotoIndex + 1) % allPhotos.length; document.getElementById('lightbox-img').src = allPhotos[currentPhotoIndex].url; };
+        window.showPrevPhoto = () => { currentPhotoIndex = (currentPhotoIndex - 1 + allPhotos.length) % allPhotos.length; document.getElementById('lightbox-img').src = allPhotos[currentPhotoIndex].url; };
+
+        function loadTabContent(tabName) {
+            const container = document.getElementById(tabName);
+            if (tabName === 'checklist') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">준비 목록</h2><button onclick="openModal('checklist', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-plus mr-1"></i>항목 추가</button></div><div id="checklist-container" class="space-y-4"></div></div>`;
+            else if (tabName === 'budget') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">예산 관리</h2><button onclick="openModal('budget', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-plus mr-1"></i>항목 추가</button></div><div id="budget-list" class="space-y-3"></div><div id="grand-total" class="mt-6 text-right text-lg"></div></div>`;
+            else if (tabName === 'guests') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">하객 명단</h2><button onclick="openModal('guest', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-user-plus mr-1"></i>하객 추가</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><h3 class="text-lg font-semibold mb-2 text-sky-600">🤵 민웅측 (<span id="groom-guest-count">0</span>명)</h3><div id="groom-guest-list" class="space-y-3"></div></div><div><h3 class="text-lg font-semibold mb-2 text-rose-500">👰 지은측 (<span id="bride-guest-count">0</span>명)</h3><div id="bride-guest-list" class="space-y-3"></div></div></div></div>`;
+            else if (tabName === 'photos') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">우리의 추억</h2><button onclick="openModal('photo', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-upload mr-1"></i>사진 올리기</button></div><div id="photo-folders-container" class="space-y-8"></div></div>`;
+        }
+
+        function setupSnapshots() {
+            if (!db) return;
+            onSnapshot(doc(db, `artifacts/${appId}/public/data/settings`, "main"), (docSnap) => {
+                if (docSnap.exists() && docSnap.data().weddingDate) { 
+                    weddingDate = docSnap.data().weddingDate.toDate(); 
+                }
+                updateDday(weddingDate);
+            });
+            onSnapshot(collection(db, `artifacts/${appId}/public/data/checklists`), (snap) => window.renderChecklist(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+            onSnapshot(collection(db, `artifacts/${appId}/public/data/budgets`), (snap) => {
+                allBudgetItems = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0));
+                window.renderBudget(allBudgetItems);
+            });
+            onSnapshot(collection(db, `artifacts/${appId}/public/data/guests`), (snap) => window.renderGuests(snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0))));
+            onSnapshot(collection(db, `artifacts/${appId}/public/data/photos`), (snap) => {
+                allPhotos = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                window.renderPhotos(allPhotos);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('weddingPlannerAuthenticated') === 'true') {
+                document.getElementById('password-gate').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                initializeFirebase();
+            }
+            document.getElementById('password-input').addEventListener('keyup', (event) => { if (event.key === "Enter") { event.preventDefault(); checkPassword(); } });
+            
+            updateDday(weddingDate);
+            updateDaysTogether();
+            setInterval(updateDaysTogether, 1000 * 60 * 60);
+            loadTabContent('checklist');
+        });
+
+        // --- 렌더링 함수들 ---
+        window.renderBudget = function(items) {
+            const list = document.getElementById('budget-list');
+            if (!list) return;
+            list.innerHTML = '';
+            let totalEstimated = 0, totalActual = 0;
+            items.forEach(item => {
+                const { estimatedAmount: estimated = 0, totalAmount: actual = 0, deposit = 0 } = item;
+                const balance = actual - deposit;
+                totalEstimated += estimated;
+                totalActual += actual;
+                const payerBadge = { groom: 'bg-sky-100 text-sky-800', bride: 'bg-rose-100 text-rose-800', joint: 'bg-green-100 text-green-800'}[item.payer];
+                const payerText = { groom: '민웅', bride: '지은', joint: '공동'}[item.payer] || '공동';
+                const div = document.createElement('div');
+                div.className = 'p-3 bg-gray-50 rounded-lg';
+                div.innerHTML = `<div class="flex justify-between items-start"><div class="item-content flex-grow" onclick="editBudgetItem('${item.id}')"><p class="font-semibold">${item.item}</p><div class="mt-2 text-xs text-gray-600 space-y-1"><p><b>예상:</b> ${formatNumberWithCommas(estimated)}원</p><p><b>실제:</b> ${formatNumberWithCommas(actual)}원 (계약금: ${formatNumberWithCommas(deposit)} / 잔금: ${formatNumberWithCommas(balance)})</p></div></div><div class="text-right ml-2 flex flex-col items-end flex-shrink-0"><div class="mb-2"><span class="text-xs font-semibold px-2 py-1 rounded-full ${payerBadge}">${payerText}</span></div><button onclick="event.stopPropagation(); deleteItem('budgets', '${item.id}')" class="text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button></div></div>`;
+                list.appendChild(div);
+            });
+            const grandTotalDiv = document.getElementById('grand-total');
+            if (grandTotalDiv) grandTotalDiv.innerHTML = `<p>총 예상: <span class="font-bold">${formatNumberWithCommas(totalEstimated)}원</span></p><p>총 지출: <span class="font-bold text-pink-600">${formatNumberWithCommas(totalActual)}원</span></p>`;
+        };
+        window.renderChecklist = function(items) {
+            const container = document.getElementById('checklist-container');
+            if (!container) return;
+            container.innerHTML = '';
+            const grouped = items.reduce((acc, item) => { const key = item.category || '기타'; if (!acc[key]) acc[key] = []; acc[key].push(item); return acc; }, {});
+            Object.keys(grouped).sort().forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.innerHTML = `<div class="flex justify-between items-center border-b pb-2 mb-3"><h3 class="text-lg font-semibold">${category}</h3><button onclick="openModal('checklist', 'add', { category: '${category}' })" class="text-pink-500 hover:text-pink-700"><i class="fas fa-plus-circle"></i></button></div>`;
+                const listContainer = document.createElement('div');
+                listContainer.className = 'space-y-2';
+                grouped[category].sort((a, b) => a.order - b.order).forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'draggable flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                    div.setAttribute('draggable', true);
+                    div.dataset.id = item.id;
+                    div.dataset.order = item.order;
+                    div.innerHTML = `<div class="flex items-center flex-grow"><i class="fas fa-grip-vertical text-gray-300 mr-3 handle"></i><input type="checkbox" id="check-${item.id}" class="h-5 w-5 rounded border-gray-300 text-pink-600 focus:ring-pink-500" ${item.completed ? 'checked' : ''}><div class="ml-3 flex-grow item-content"><p class="${item.completed ? 'completed' : ''}">${item.text}</p>${item.date ? `<p class="text-xs text-gray-500 ${item.completed ? 'completed' : ''}">${item.date}</p>` : ''}</div></div><button onclick="deleteItem('checklists', '${item.id}')" class="ml-2 text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button>`;
+                    div.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
+                        if (db && userId) {
+                            updateDoc(doc(db, `artifacts/${appId}/public/data/checklists`, item.id), { completed: e.target.checked });
+                        }
+                    });
+                    div.querySelector('.item-content').addEventListener('click', () => openModal('checklist', 'edit', item));
+                    let draggedItem = null;
+                    div.addEventListener('dragstart', (e) => { draggedItem = div; setTimeout(() => div.classList.add('dragging'), 0); });
+                    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+                    listContainer.addEventListener('dragover', e => e.preventDefault());
+                    listContainer.addEventListener('drop', async (e) => {
+                        e.preventDefault();
+                        if (!draggedItem || !db || !userId) return;
+                        const afterElement = [...listContainer.querySelectorAll('.draggable:not(.dragging)')].reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = e.clientY - box.top - box.height / 2; return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest; }, { offset: Number.NEGATIVE_INFINITY }).element;
+                        const siblings = Array.from(listContainer.querySelectorAll('.draggable'));
+                        const dropIndex = afterElement ? siblings.indexOf(afterElement) : siblings.length;
+                        const prevOrder = siblings[dropIndex - 1] ? parseFloat(siblings[dropIndex - 1].dataset.order) : 0;
+                        const nextOrder = siblings[dropIndex] ? parseFloat(siblings[dropIndex].dataset.order) : Date.now();
+                        const newOrder = (prevOrder + nextOrder) / 2;
+                        await updateDoc(doc(db, `artifacts/${appId}/public/data/checklists`, draggedItem.dataset.id), { order: newOrder });
+                        draggedItem = null;
+                    });
+                    listContainer.appendChild(div);
+                });
+                categoryDiv.appendChild(listContainer);
+                container.appendChild(categoryDiv);
+            });
+        };
+        window.renderGuests = function(items) {
+            const sides = { groom: document.getElementById('groom-guest-list'), bride: document.getElementById('bride-guest-list') };
+            if (!sides.groom || !sides.bride) return;
+            sides.groom.innerHTML = ''; sides.bride.innerHTML = '';
+            let counts = { groom: 0, bride: 0 };
+            const relationText = { family: '가족', friend: '친구', coworker: '직장동료', etc: '기타' };
+            const grouped = items.reduce((acc, item) => { const side = item.side || 'groom'; const relation = item.relation || 'etc'; if (!acc[side]) acc[side] = {}; if (!acc[side][relation]) acc[side][relation] = []; acc[side][relation].push(item); return acc; }, {});
+            for (const side in grouped) {
+                for (const relation in grouped[side]) {
+                    const relationCount = grouped[side][relation].length;
+                    const relationHeader = document.createElement('h4');
+                    relationHeader.className = 'font-semibold text-gray-600 mt-3 text-sm';
+                    relationHeader.textContent = `${relationText[relation]} (${relationCount}명)`;
+                    sides[side].appendChild(relationHeader);
+                    grouped[side][relation].forEach(item => {
+                        counts[side]++;
+                        const div = document.createElement('div');
+                        div.className = 'p-2 bg-gray-50 rounded flex justify-between items-center';
+                        div.innerHTML = `<span class="item-content flex-grow">${item.name}</span><button onclick="deleteItem('guests', '${item.id}')" class="text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button>`;
+                        div.querySelector('.item-content').addEventListener('click', () => openModal('guest', 'edit', item));
+                        sides[side].appendChild(div);
+                    });
+                }
+            }
+            document.getElementById('groom-guest-count').textContent = counts.groom;
+            document.getElementById('bride-guest-count').textContent = counts.bride;
+        };
+        window.renderPhotos = function(items) {
+            const container = document.getElementById('photo-folders-container');
+            if (!container) return;
+            container.innerHTML = '';
+            if (items.length === 0) { container.innerHTML = '<p class="text-center text-gray-500">아직 사진이 없어요. 첫 사진을 올려보세요!</p>'; return; }
+            const groupedByFolder = items.reduce((acc, photo) => { const folder = photo.folderName || '기타'; if (!acc[folder]) acc[folder] = []; acc[folder].push(photo); return acc; }, {});
+            const sortedFolders = Object.keys(groupedByFolder).sort((a, b) => { if (a === '기타') return 1; if (b === '기타') return -1; return a.localeCompare(b); });
+            sortedFolders.forEach(folderName => {
+                const photosInFolder = groupedByFolder[folderName];
+                const folderDiv = document.createElement('div');
+                folderDiv.innerHTML = `<div class="border-b pb-2 mb-3"><h3 class="text-xl font-semibold text-gray-700">${folderName} <span class="text-sm font-normal text-gray-500">(${photosInFolder.length})</span></h3></div><div class="grid grid-cols-3 sm:grid-cols-4 gap-2">${photosInFolder.map(photo => { const originalIndex = allPhotos.findIndex(p => p.id === photo.id); return `<div class="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group cursor-pointer" onclick="openLightbox(${originalIndex})"><img src="${photo.url}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x400/FFFBF7/D98BA0?text=Error';"><div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center"><button onclick="event.stopPropagation(); deleteItem('photos', '${photo.id}')" class="text-white opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt fa-lg"></i></button></div></div>`; }).join('')}</div>`;
+                container.appendChild(folderDiv);
+            });
+        };
+    </script>
+</body>
+</html>
