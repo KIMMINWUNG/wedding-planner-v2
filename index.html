@@ -122,13 +122,12 @@
     <script type="module">
         // Firebase SDK import
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, doc, addDoc, deleteDoc, updateDoc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // --- 1. Firebase 설정 ---
-        // 이 부분은 2단계에서 생성한 자신의 Firebase 설정으로 교체해주세요.
-        const firebaseConfig = {
+       const firebaseConfig = {
   apiKey: "AIzaSyAGsIe6fQKF1QiUgE3uyeWWNwc4qlzmX0E",
   authDomain: "my-wedding-planner-9ee2e.firebaseapp.com",
   projectId: "my-wedding-planner-9ee2e",
@@ -137,11 +136,14 @@
   appId: "1:7609656615:web:d7d8c7149994bcbccdb502"
 };
 
-        const appId = 'wedding-planner-v2'; // 앱 고유 ID (변경 가능)
+        const appId = 'wedding-planner-v2';
 
         let app, auth, db, storage, userId, currentModal = {};
         let weddingDate = new Date('2026-04-04T13:20:00');
-        let allPhotos = [], allBudgetItems = [];
+        
+        // [핵심 수정] 모든 데이터를 저장할 전역 변수 선언
+        let allChecklistItems = [], allBudgetItems = [], allGuests = [], allPhotos = [];
+        
         let currentPhotoIndex = 0;
         let isFirebaseInitialized = false;
 
@@ -206,23 +208,57 @@
         }
 
         function initializeDatePicker() {
-             flatpickr("#wedding-date-picker", {
-                enableTime: true, dateFormat: "Y-m-d H:i", defaultDate: weddingDate, wrap: true,
+            const container = document.getElementById('wedding-date-container');
+            if (!container) {
+                console.error("DatePicker container not found!");
+                return;
+            }
+            flatpickr("#wedding-date-picker", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                defaultDate: weddingDate,
+                wrap: true,
+                appendTo: container, 
                 onChange: async (selectedDates) => { 
-                    if(db && userId) {
+                    if(db && userId && selectedDates.length > 0) {
                         await setDoc(doc(db, `artifacts/${appId}/public/data/settings`, "main"), { weddingDate: selectedDates[0] }); 
                     }
                 }
-            }).config.appendTo(document.getElementById('wedding-date-container'));
+            });
         }
 
+        // [핵심 수정] 현재 활성화된 탭에 맞춰 화면을 다시 그리는 함수
+        function renderActiveTab() {
+            const activeTabButton = document.querySelector('.tab-button.active');
+            if (!activeTabButton) return;
+            const tabName = activeTabButton.getAttribute('onclick').match(/'([^']+)'/)[1];
+
+            if (tabName === 'checklist') {
+                window.renderChecklist(allChecklistItems);
+            } else if (tabName === 'budget') {
+                window.renderBudget(allBudgetItems);
+            } else if (tabName === 'guests') {
+                window.renderGuests(allGuests);
+            } else if (tabName === 'photos') {
+                window.renderPhotos(allPhotos);
+            }
+        }
+
+        // [핵심 수정] 탭 변경 시 화면을 다시 그리도록 수정
         window.changeTab = (tabName) => {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
             const container = document.getElementById(tabName);
             container.classList.remove('hidden');
-            if (!container.innerHTML.trim()) loadTabContent(tabName);
+
+            if (!container.innerHTML.trim()) {
+                loadTabContent(tabName);
+            }
+
             document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
             document.querySelector(`button[onclick="changeTab('${tabName}')"]`).classList.add('active');
+            
+            // 탭이 변경되었으므로, 해당 탭의 최신 데이터로 화면을 다시 그림
+            renderActiveTab();
         };
 
         const updateDday = (date) => {
@@ -397,6 +433,7 @@
             else if (tabName === 'photos') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">우리의 추억</h2><button onclick="openModal('photo', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-upload mr-1"></i>사진 올리기</button></div><div id="photo-folders-container" class="space-y-8"></div></div>`;
         }
 
+        // [핵심 수정] onSnapshot은 데이터만 업데이트하고, 화면 그리기는 renderActiveTab 함수에 맡김
         function setupSnapshots() {
             if (!db) return;
             onSnapshot(doc(db, `artifacts/${appId}/public/data/settings`, "main"), (docSnap) => {
@@ -405,15 +442,21 @@
                 }
                 updateDday(weddingDate);
             });
-            onSnapshot(collection(db, `artifacts/${appId}/public/data/checklists`), (snap) => window.renderChecklist(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+            onSnapshot(collection(db, `artifacts/${appId}/public/data/checklists`), (snap) => {
+                allChecklistItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderActiveTab();
+            });
             onSnapshot(collection(db, `artifacts/${appId}/public/data/budgets`), (snap) => {
                 allBudgetItems = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0));
-                window.renderBudget(allBudgetItems);
+                renderActiveTab();
             });
-            onSnapshot(collection(db, `artifacts/${appId}/public/data/guests`), (snap) => window.renderGuests(snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0))));
+            onSnapshot(collection(db, `artifacts/${appId}/public/data/guests`), (snap) => {
+                allGuests = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0));
+                renderActiveTab();
+            });
             onSnapshot(collection(db, `artifacts/${appId}/public/data/photos`), (snap) => {
                 allPhotos = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-                window.renderPhotos(allPhotos);
+                renderActiveTab();
             });
         }
         
