@@ -35,6 +35,11 @@
         input[type=number] {
           -moz-appearance: textfield;
         }
+        /* Guest list accordion style */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details > summary::after { content: '▸'; float: right; transition: transform 0.2s; margin-left: auto; }
+        details[open] > summary::after { transform: rotate(90deg); }
     </style>
 </head>
 <body class="text-gray-800">
@@ -105,7 +110,7 @@
                 <p id="confirm-message">이 항목을 정말로 삭제하시겠습니까?</p>
                 <div class="flex justify-end mt-6 space-x-2">
                     <button id="confirm-cancel" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400">취소</button>
-                    <button id="confirm-ok" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">삭제</button>
+                    <button id="confirm-ok" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">확인</button>
                 </div>
             </div>
         </div>
@@ -287,6 +292,19 @@
                 document.getElementById('days-together-counter').innerHTML = `함께한 지 <span class="font-semibold text-pink-500">${diffDays + 1}</span>일째`;
             }
         };
+        
+        // --- [NEW] Guest Modal Helper ---
+        window.addGuestNameField = () => {
+            const container = document.getElementById('guest-names-container');
+            const newEntry = document.createElement('div');
+            newEntry.className = 'flex items-center mt-1 guest-name-entry';
+            newEntry.innerHTML = `
+                <input type="text" name="guestName" class="w-full p-2 border rounded" required>
+                <button type="button" onclick="this.parentElement.remove()" class="ml-2 text-red-500 hover:text-red-700"><i class="fas fa-minus-circle"></i></button>
+            `;
+            container.appendChild(newEntry);
+            newEntry.querySelector('input').focus();
+        };
 
         window.openModal = (type, mode, item = {}) => {
             currentModal = { type, mode, item };
@@ -298,7 +316,13 @@
 
             if (type === 'checklist') {
                 title.textContent = isEdit ? '체크리스트 수정' : '새 체크리스트 항목';
-                form.innerHTML = `<input type="hidden" id="itemId" value="${item.id || ''}"><div><label class="block text-sm font-medium">항목 내용</label><input type="text" id="checklistItemText" class="mt-1 w-full p-2 border rounded" value="${item.text || ''}" required></div><div><label class="block text-sm font-medium">카테고리</label><input type="text" id="checklistItemCategory" value="${item.category || ''}" class="mt-1 w-full p-2 border rounded"></div><div><label class="block text-sm font-medium">날짜/메모</label><input type="text" id="checklistItemDate" value="${item.date || ''}" class="mt-1 w-full p-2 border rounded"></div>`;
+                form.innerHTML = `<input type="hidden" id="itemId" value="${item.id || ''}">
+                    <div><label class="block text-sm font-medium">항목 내용</label><input type="text" id="checklistItemText" class="mt-1 w-full p-2 border rounded" value="${item.text || ''}" required></div>
+                    <div><label class="block text-sm font-medium">카테고리</label><input type="text" id="checklistItemCategory" value="${item.category || ''}" class="mt-1 w-full p-2 border rounded"></div>
+                    <div><label class="block text-sm font-medium">날짜</label><input type="text" id="checklistItemDate" value="${item.date || ''}" class="mt-1 w-full p-2 border rounded" placeholder="날짜 선택"></div>
+                    <div><label class="block text-sm font-medium">메모</label><textarea id="checklistItemMemo" class="mt-1 w-full p-2 border rounded" rows="2" placeholder="간단한 메모를 남겨보세요.">${item.memo || ''}</textarea></div>
+                     <div><label class="block text-sm font-medium">장소 (선택)</label><input type="text" id="checklistItemLocation" placeholder="예: 창원 리베라 컨벤션" class="mt-1 w-full p-2 border rounded" value="${item.location || ''}"></div>
+                    `;
                 flatpickr("#checklistItemDate", { enableTime: true, dateFormat: "Y-m-d H:i" });
             } else if (type === 'budget') {
                 title.textContent = isEdit ? '예산 항목 수정' : '새 예산 항목';
@@ -306,8 +330,30 @@
                 if(isEdit) document.getElementById('budgetPayer').value = item.payer;
             } else if (type === 'guest') {
                 title.textContent = isEdit ? '하객 정보 수정' : '새 하객 추가';
-                form.innerHTML = `<input type="hidden" id="itemId" value="${item.id || ''}"><div><label class="block text-sm font-medium">이름</label><input type="text" id="guestName" value="${item.name || ''}" class="mt-1 w-full p-2 border rounded" required></div><div><label class="block text-sm font-medium">소속</label><select id="guestSide" class="mt-1 w-full p-2 border rounded"><option value="groom">민웅</option><option value="bride">지은</option></select></div><div><label class="block text-sm font-medium">관계</label><select id="guestRelation" class="mt-1 w-full p-2 border rounded"><option value="family">가족</option><option value="friend">친구</option><option value="coworker">직장동료</option><option value="etc">기타</option></select></div>`;
-                if(isEdit) { document.getElementById('guestSide').value = item.side; document.getElementById('guestRelation').value = item.relation; }
+                let formHTML = `
+                    <input type="hidden" id="itemId" value="${item.id || ''}">
+                    <div><label class="block text-sm font-medium">소속</label><select id="guestSide" class="mt-1 w-full p-2 border rounded"><option value="groom">민웅</option><option value="bride">지은</option></select></div>
+                    <div><label class="block text-sm font-medium">관계</label><select id="guestRelation" class="mt-1 w-full p-2 border rounded"><option value="family">가족</option><option value="friend">친구</option><option value="coworker">직장동료</option><option value="etc">기타</option></select></div>
+                    <hr>
+                    <div id="guest-names-container">
+                        <label class="block text-sm font-medium">이름</label>
+                        <div class="flex items-center mt-1 guest-name-entry">
+                            <input type="text" name="guestName" class="w-full p-2 border rounded" required>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addGuestNameField()" class="mt-2 text-sm text-pink-500 hover:text-pink-700"><i class="fas fa-plus mr-1"></i>이름 추가</button>
+                `;
+                if (isEdit) {
+                    formHTML = `<input type="hidden" id="itemId" value="${item.id || ''}">
+                        <div><label class="block text-sm font-medium">이름</label><input type="text" name="guestName" value="${item.name || ''}" class="mt-1 w-full p-2 border rounded" required></div>
+                        <div><label class="block text-sm font-medium">소속</label><select id="guestSide" class="mt-1 w-full p-2 border rounded"><option value="groom">민웅</option><option value="bride">지은</option></select></div>
+                        <div><label class="block text-sm font-medium">관계</label><select id="guestRelation" class="mt-1 w-full p-2 border rounded"><option value="family">가족</option><option value="friend">친구</option><option value="coworker">직장동료</option><option value="etc">기타</option></select></div>`;
+                }
+                form.innerHTML = formHTML;
+                if(isEdit) { 
+                    document.getElementById('guestSide').value = item.side; 
+                    document.getElementById('guestRelation').value = item.relation; 
+                }
             } else if (type === 'photo') {
                 title.textContent = '사진 올리기';
                 const existingFolders = [...new Set(allPhotos.map(p => p.folderName).filter(Boolean))];
@@ -333,10 +379,22 @@
         
         function showConfirm(message, onConfirm) {
             const confirmModal = document.getElementById('confirmModal');
-            document.getElementById('confirm-message').textContent = message;
-            confirmModal.classList.remove('hidden');
             const okBtn = document.getElementById('confirm-ok');
             const cancelBtn = document.getElementById('confirm-cancel');
+            
+            document.getElementById('confirm-message').textContent = message;
+            
+            // For guest duplicates, change button text.
+            if (message.includes('중복된 하객')) {
+                okBtn.textContent = '추가';
+                cancelBtn.textContent = '취소';
+            } else {
+                okBtn.textContent = '삭제';
+                 cancelBtn.textContent = '취소';
+            }
+
+            confirmModal.classList.remove('hidden');
+            
             const close = () => {
                 confirmModal.classList.add('hidden');
                 okBtn.onclick = null;
@@ -413,38 +471,96 @@
         }
 
         window.handleFormSubmit = async () => {
-            if (!db || !userId) { alert("데이터베이스 연결이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요."); return; }
-            const { type, mode } = currentModal;
-            const id = document.getElementById('itemId').value;
-            let data = {};
+            if (!db || !userId) { alert("데이터베이스 연결 준비 안됨"); return; }
+            const { type, mode, item } = currentModal;
+            const id = document.getElementById('itemId')?.value || item.id;
+
             try {
                 if (type === 'checklist') {
-                    data = { text: document.getElementById('checklistItemText').value, category: document.getElementById('checklistItemCategory').value || '기타', date: document.getElementById('checklistItemDate').value };
+                    const data = {
+                        text: document.getElementById('checklistItemText').value.trim(),
+                        category: document.getElementById('checklistItemCategory').value.trim() || '기타',
+                        date: document.getElementById('checklistItemDate').value.trim(),
+                        memo: document.getElementById('checklistItemMemo').value.trim(),
+                        location: document.getElementById('checklistItemLocation').value.trim()
+                    };
+                    if (!data.text) { alert('항목 내용을 입력해주세요.'); return; }
+                    
+                    if (mode === 'edit' && id) {
+                        await updateDoc(doc(db, `artifacts/${appId}/public/data/checklists`, id), data);
+                    } else {
+                        await addDoc(collection(db, `artifacts/${appId}/public/data/checklists`), { ...data, order: Date.now(), createdAt: new Date(), completed: false });
+                    }
                 } else if (type === 'budget') {
-                    data = { item: document.getElementById('budgetItem').value, estimatedAmount: parseFormattedNumber(document.getElementById('budgetEstimated').value), totalAmount: parseFormattedNumber(document.getElementById('budgetTotal').value), deposit: parseFormattedNumber(document.getElementById('budgetDeposit').value), payer: document.getElementById('budgetPayer').value };
+                    const data = {
+                        item: document.getElementById('budgetItem').value.trim(),
+                        estimatedAmount: parseFormattedNumber(document.getElementById('budgetEstimated').value),
+                        totalAmount: parseFormattedNumber(document.getElementById('budgetTotal').value),
+                        deposit: parseFormattedNumber(document.getElementById('budgetDeposit').value),
+                        payer: document.getElementById('budgetPayer').value
+                    };
+                    if (!data.item) { alert('항목을 입력해주세요.'); return; }
+
+                    if (mode === 'edit' && id) {
+                        await updateDoc(doc(db, `artifacts/${appId}/public/data/budgets`, id), data);
+                    } else {
+                        await addDoc(collection(db, `artifacts/${appId}/public/data/budgets`), { ...data, createdAt: new Date() });
+                    }
                 } else if (type === 'guest') {
-                    data = { name: document.getElementById('guestName').value, side: document.getElementById('guestSide').value, relation: document.getElementById('guestRelation').value };
-                }
+                    if (mode === 'edit' && id) {
+                        const data = {
+                            name: document.querySelector('input[name="guestName"]').value.trim(),
+                            side: document.getElementById('guestSide').value,
+                            relation: document.getElementById('guestRelation').value,
+                        };
+                        if (!data.name) { alert('하객 이름을 입력해주세요.'); return; }
 
-                const collectionName = type === 'guest' ? 'guests' : `${type}s`;
+                        const isDuplicate = allGuests.some(g => g.id !== id && g.name === data.name);
+                        const processUpdate = async () => {
+                            await updateDoc(doc(db, `artifacts/${appId}/public/data/guests`, id), data);
+                            closeModal();
+                        };
+                        if (isDuplicate) {
+                            showConfirm('중복된 하객이 존재합니다. 확인하시기 바랍니다.', processUpdate);
+                            return; 
+                        }
+                        await processUpdate();
+                    } else { 
+                        const nameInputs = document.querySelectorAll('input[name="guestName"]');
+                        const names = [...nameInputs].map(input => input.value.trim()).filter(Boolean);
+                        if (names.length === 0) { alert("하객 이름을 한 명 이상 입력해주세요."); return; }
+                        
+                        const side = document.getElementById('guestSide').value;
+                        const relation = document.getElementById('guestRelation').value;
+                        const duplicates = names.filter(name => allGuests.some(g => g.name === name));
 
-                if (mode === 'edit' && id) {
-                    const docToUpdateRef = doc(db, `artifacts/${appId}/public/data/${collectionName}`, id);
-                    await updateDoc(docToUpdateRef, data);
-                } else {
-                    const collectionRef = collection(db, `artifacts/${appId}/public/data/${collectionName}`);
-                    if (type === 'checklist') data.order = Date.now();
-                    data.createdAt = new Date();
-                    await addDoc(collectionRef, data);
+                        const processSave = async () => {
+                            const batch = writeBatch(db);
+                            names.forEach(name => {
+                                const docRef = doc(collection(db, `artifacts/${appId}/public/data/guests`));
+                                batch.set(docRef, { name, side, relation, createdAt: new Date() });
+                            });
+                            await batch.commit();
+                            closeModal();
+                        };
+
+                        if (duplicates.length > 0) {
+                            showConfirm(`중복된 하객(${duplicates.join(', ')})이 존재합니다. 확인하시기 바랍니다.`, processSave);
+                            return; 
+                        }
+                        await processSave();
+                    }
+                    return; // Return because closeModal is handled inside the logic.
                 }
-            } catch (e) { 
-                console.error("Error saving document: ", e); 
+            } catch (e) {
+                console.error("저장 중 오류 발생: ", e);
             }
             closeModal();
         };
         
         window.deleteItem = async (collectionName, id) => {
-            showConfirm('정말로 삭제하시겠습니까?', async () => {
+            const message = collectionName === 'guests' ? '이 하객을 정말로 삭제하시겠습니까?' : '정말로 삭제하시겠습니까?';
+            showConfirm(message, async () => {
                 if (!db || !userId) { console.error("DB not ready or user not authenticated."); return; }
                 try {
                     if (collectionName === 'photos') {
@@ -460,18 +576,16 @@
             });
         };
         
-        window.editBudgetItem = (id) => { const itemToEdit = allBudgetItems.find(item => item.id === id); if (itemToEdit) openModal('budget', 'edit', itemToEdit); };
+        window.editBudgetItem = (id) => { const item = allBudgetItems.find(i => i.id === id); if(item) openModal('budget', 'edit', item); };
+        window.editGuestItem = (id) => { const item = allGuests.find(i => i.id === id); if(item) openModal('guest', 'edit', item); };
         
         const lightbox = document.getElementById('lightbox');
         let touchStartX = 0;
         const handleTouchStart = (e) => { touchStartX = e.changedTouches[0].screenX; };
         const handleTouchEnd = (e) => {
             let touchEndX = e.changedTouches[0].screenX;
-            if (touchStartX - touchEndX > 50) {
-                showNextPhoto();
-            } else if (touchEndX - touchStartX > 50) {
-                showPrevPhoto();
-            }
+            if (touchStartX - touchEndX > 50) { showNextPhoto(); } 
+            else if (touchEndX - touchStartX > 50) { showPrevPhoto(); }
         };
 
         window.openLightbox = (index) => {
@@ -510,6 +624,7 @@
             const currentVisiblePhotos = (photoViewMode === 'single_folder' && currentFolderName)
                 ? allPhotos.filter(p => (p.folderName || '기타') === currentFolderName)
                 : allPhotos;
+            if (currentVisiblePhotos.length === 0) return;
             currentPhotoIndex = (currentPhotoIndex + 1) % currentVisiblePhotos.length;
             updateLightboxImage();
         };
@@ -518,6 +633,7 @@
             const currentVisiblePhotos = (photoViewMode === 'single_folder' && currentFolderName)
                 ? allPhotos.filter(p => (p.folderName || '기타') === currentFolderName)
                 : allPhotos;
+            if (currentVisiblePhotos.length === 0) return;
             currentPhotoIndex = (currentPhotoIndex - 1 + currentVisiblePhotos.length) % currentVisiblePhotos.length;
             updateLightboxImage();
         };
@@ -526,7 +642,7 @@
             const container = document.getElementById(tabName);
             if (tabName === 'checklist') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">준비 목록</h2><button onclick="openModal('checklist', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-plus mr-1"></i>항목 추가</button></div><div id="checklist-container" class="space-y-4"></div></div>`;
             else if (tabName === 'budget') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">예산 관리</h2><button onclick="openModal('budget', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-plus mr-1"></i>항목 추가</button></div><div id="budget-list" class="space-y-3"></div><div id="grand-total" class="mt-6 text-right text-lg"></div></div>`;
-            else if (tabName === 'guests') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">하객 명단</h2><button onclick="openModal('guest', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-user-plus mr-1"></i>하객 추가</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><h3 class="text-lg font-semibold mb-2 text-sky-600">🤵 민웅측 (<span id="groom-guest-count">0</span>명)</h3><div id="groom-guest-list" class="space-y-3"></div></div><div><h3 class="text-lg font-semibold mb-2 text-rose-500">👰 지은측 (<span id="bride-guest-count">0</span>명)</h3><div id="bride-guest-list" class="space-y-3"></div></div></div></div>`;
+            else if (tabName === 'guests') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">하객 명단</h2><button onclick="openModal('guest', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-user-plus mr-1"></i>하객 추가</button></div><div class="space-y-6"><div id="groom-container"></div><div id="bride-container"></div></div></div>`;
             else if (tabName === 'photos') {
                 container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md">
                     <div id="photo-header" class="flex justify-between items-center mb-4">
@@ -607,19 +723,26 @@
                 categoryDiv.innerHTML = `<div class="flex justify-between items-center border-b pb-2 mb-3"><h3 class="text-lg font-semibold">${category}</h3><button onclick="openModal('checklist', 'add', { category: '${category}' })" class="text-pink-500 hover:text-pink-700"><i class="fas fa-plus-circle"></i></button></div>`;
                 const listContainer = document.createElement('div');
                 listContainer.className = 'space-y-2';
-                grouped[category].sort((a, b) => a.order - b.order).forEach(item => {
+                grouped[category].sort((a, b) => (a.order || 0) - (b.order || 0)).forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'draggable flex items-center justify-between p-3 bg-gray-50 rounded-lg';
                     div.setAttribute('draggable', true);
                     div.dataset.id = item.id;
                     div.dataset.order = item.order;
-                    div.innerHTML = `<div class="flex items-center flex-grow"><i class="fas fa-grip-vertical text-gray-300 mr-3 handle"></i><input type="checkbox" id="check-${item.id}" class="h-5 w-5 rounded border-gray-300 text-pink-600 focus:ring-pink-500" ${item.completed ? 'checked' : ''}><div class="ml-3 flex-grow item-content"><p class="${item.completed ? 'completed' : ''}">${item.text}</p>${item.date ? `<p class="text-xs text-gray-500 ${item.completed ? 'completed' : ''}">${item.date}</p>` : ''}</div></div><button onclick="deleteItem('checklists', '${item.id}')" class="ml-2 text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button>`;
+                    
+                    let detailsHTML = '';
+                    if (item.date) detailsHTML += `<p class="text-xs text-gray-500 ${item.completed ? 'completed' : ''}"><i class="far fa-calendar-alt fa-fw mr-1"></i>${item.date}</p>`;
+                    if (item.memo) detailsHTML += `<p class="text-xs text-gray-500 ${item.completed ? 'completed' : ''}"><i class="far fa-sticky-note fa-fw mr-1"></i>${item.memo}</p>`;
+                    if (item.location) detailsHTML += `<a href="https://map.naver.com/p/search/${encodeURIComponent(item.location)}" target="_blank" class="text-xs text-blue-500 hover:underline ${item.completed ? 'completed' : ''}" onclick="event.stopPropagation();"><i class="fas fa-map-marker-alt fa-fw mr-1"></i>${item.location}</a>`;
+                    
+                    div.innerHTML = `<div class="flex items-center flex-grow"><i class="fas fa-grip-vertical text-gray-300 mr-3 handle"></i><input type="checkbox" id="check-${item.id}" class="h-5 w-5 rounded border-gray-300 text-pink-600 focus:ring-pink-500" ${item.completed ? 'checked' : ''}><div class="ml-3 flex-grow item-content"><p class="${item.completed ? 'completed' : ''}">${item.text}</p><div class="mt-1 space-y-1">${detailsHTML}</div></div></div><button onclick="deleteItem('checklists', '${item.id}')" class="ml-2 text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button>`;
                     div.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
                         if (db && userId) {
                             updateDoc(doc(db, `artifacts/${appId}/public/data/checklists`, item.id), { completed: e.target.checked });
                         }
                     });
                     div.querySelector('.item-content').addEventListener('click', () => openModal('checklist', 'edit', item));
+                    // Drag and drop logic...
                     let draggedItem = null;
                     div.addEventListener('dragstart', (e) => { draggedItem = div; setTimeout(() => div.classList.add('dragging'), 0); });
                     div.addEventListener('dragend', () => div.classList.remove('dragging'));
@@ -643,31 +766,75 @@
             });
         };
         window.renderGuests = function(items) {
-            const sides = { groom: document.getElementById('groom-guest-list'), bride: document.getElementById('bride-guest-list') };
-            if (!sides.groom || !sides.bride) return;
-            sides.groom.innerHTML = ''; sides.bride.innerHTML = '';
-            let counts = { groom: 0, bride: 0 };
+            const containerMap = { 
+                groom: document.getElementById('groom-container'), 
+                bride: document.getElementById('bride-container') 
+            };
+            if (!containerMap.groom || !containerMap.bride) return;
+
+            containerMap.groom.innerHTML = ''; 
+            containerMap.bride.innerHTML = '';
+            
             const relationText = { family: '가족', friend: '친구', coworker: '직장동료', etc: '기타' };
-            const grouped = items.reduce((acc, item) => { const side = item.side || 'groom'; const relation = item.relation || 'etc'; if (!acc[side]) acc[side] = {}; if (!acc[side][relation]) acc[side][relation] = []; acc[side][relation].push(item); return acc; }, {});
-            for (const side in grouped) {
-                for (const relation in grouped[side]) {
-                    const relationCount = grouped[side][relation].length;
-                    const relationHeader = document.createElement('h4');
-                    relationHeader.className = 'font-semibold text-gray-600 mt-3 text-sm';
-                    relationHeader.textContent = `${relationText[relation]} (${relationCount}명)`;
-                    sides[side].appendChild(relationHeader);
-                    grouped[side][relation].forEach(item => {
-                        counts[side]++;
-                        const div = document.createElement('div');
-                        div.className = 'p-2 bg-gray-50 rounded flex justify-between items-center';
-                        div.innerHTML = `<span class="item-content flex-grow">${item.name}</span><button onclick="deleteItem('guests', '${item.id}')" class="text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button>`;
-                        div.querySelector('.item-content').addEventListener('click', () => openModal('guest', 'edit', item));
-                        sides[side].appendChild(div);
-                    });
-                }
+
+            const groupedBySide = items.reduce((acc, item) => {
+                const side = item.side || 'groom';
+                if (!acc[side]) acc[side] = [];
+                acc[side].push(item);
+                return acc;
+            }, { groom: [], bride: [] });
+
+            for (const side of ['groom', 'bride']) {
+                const sideContainer = containerMap[side];
+                const sideGuests = groupedBySide[side];
+                const sideTitle = side === 'groom' ? `🤵 민웅측 (${sideGuests.length}명)` : `👰 지은측 (${sideGuests.length}명)`;
+                const sideColor = side === 'groom' ? 'text-sky-600' : 'text-rose-500';
+
+                const sideDetails = document.createElement('details');
+                sideDetails.innerHTML = `<summary class="text-lg font-semibold mb-2 ${sideColor} cursor-pointer flex justify-between items-center"><h3>${sideTitle}</h3></summary>`;
+                
+                const relationListContainer = document.createElement('div');
+                relationListContainer.className = 'space-y-3 pl-4';
+                
+                const groupedByRelation = sideGuests.reduce((acc, item) => {
+                    const relation = item.relation || 'etc';
+                    if (!acc[relation]) acc[relation] = [];
+                    acc[relation].push(item);
+                    return acc;
+                }, {});
+
+                Object.keys(relationText).forEach(relationKey => {
+                    if (groupedByRelation[relationKey]) {
+                        const guestsInRelation = groupedByRelation[relationKey];
+                        const details = document.createElement('details');
+                        details.className = 'bg-gray-50 rounded-lg';
+                        
+                        const summary = document.createElement('summary');
+                        summary.className = 'p-3 font-semibold cursor-pointer flex justify-between items-center';
+                        summary.innerHTML = `<span>${relationText[relationKey]} (${guestsInRelation.length}명)</span>`;
+                        
+                        const listDiv = document.createElement('div');
+                        listDiv.className = 'px-3 pb-3 space-y-2';
+
+                        guestsInRelation.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'p-2 bg-white rounded flex justify-between items-center';
+                            div.innerHTML = `<span class="item-content flex-grow">${item.name}</span>
+                                            <div class="space-x-2">
+                                                <button onclick="editGuestItem('${item.id}')" class="text-gray-400 hover:text-blue-500"><i class="fas fa-pen fa-sm"></i></button>
+                                                <button onclick="deleteItem('guests', '${item.id}')" class="text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button>
+                                            </div>`;
+                            listDiv.appendChild(div);
+                        });
+
+                        details.appendChild(summary);
+                        details.appendChild(listDiv);
+                        relationListContainer.appendChild(details);
+                    }
+                });
+                sideDetails.appendChild(relationListContainer);
+                sideContainer.appendChild(sideDetails);
             }
-            document.getElementById('groom-guest-count').textContent = counts.groom;
-            document.getElementById('bride-guest-count').textContent = counts.bride;
         };
 
         // --- 사진첩 관련 함수들 ---
@@ -684,7 +851,7 @@
                 const selectedCount = photosSelectedForDeletion.size;
                 title = `${selectedCount}개 사진 선택됨`;
                 buttons = `<button onclick="exitDeleteMode(true)" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 text-sm">취소</button>
-                           <button onclick="deleteSelectedPhotos()" class="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 text-sm ml-2"><i class="fas fa-trash-alt mr-1"></i>선택 삭제</button>`;
+                           <button onclick="deleteSelectedPhotos()" class="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 text-sm ml-2" ${selectedCount === 0 ? 'disabled' : ''}><i class="fas fa-trash-alt mr-1"></i>선택 삭제</button>`;
             } else if (photoViewMode === 'single_folder') {
                 title = currentFolderName;
                 buttons = `<button onclick="navigateBackToFolders(true)" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 text-sm"><i class="fas fa-arrow-left mr-1"></i>뒤로</button>
@@ -854,3 +1021,4 @@
     </script>
 </body>
 </html>
+
