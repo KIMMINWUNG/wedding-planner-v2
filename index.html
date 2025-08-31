@@ -717,6 +717,7 @@
             if (!list || !grandTotalDiv) return;
 
             list.innerHTML = '';
+            list.className = 'space-y-3';
             
             const totals = {
                 all: { estimated: 0, actual: 0 },
@@ -755,23 +756,26 @@
 
             categoryOrder.forEach(category => {
                 if (grouped[category]) {
-                    const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'mb-6';
+                    const details = document.createElement('details');
+                    details.className = 'bg-gray-50 rounded-lg';
+
+                    const summary = document.createElement('summary');
+                    summary.className = 'p-3 font-semibold cursor-pointer flex items-center guest-summary';
+                    const itemCount = grouped[category].length;
                     
                     const categoryTotalEstimated = grouped[category].reduce((sum, item) => sum + (item.estimatedAmount || 0), 0);
                     const categoryTotalActual = grouped[category].reduce((sum, item) => sum + (item.totalAmount || 0), 0);
 
-                    categoryDiv.innerHTML = `
-                        <div class="flex justify-between items-center border-b pb-2 mb-3">
-                            <h3 class="text-lg font-semibold">${category}</h3>
-                            <div class="text-sm text-right">
-                                <p>예상: ${formatNumberWithCommas(categoryTotalEstimated)}원</p>
-                                <p>지출: ${formatNumberWithCommas(categoryTotalActual)}원</p>
-                            </div>
-                        </div>`;
+                    summary.innerHTML = `
+                        <span class="flex-grow text-lg">${category} (${itemCount})</span>
+                        <div class="text-sm text-right">
+                            <p>예상: ${formatNumberWithCommas(categoryTotalEstimated)}원</p>
+                            <p>지출: ${formatNumberWithCommas(categoryTotalActual)}원</p>
+                        </div>
+                    `;
                     
                     const itemListContainer = document.createElement('div');
-                    itemListContainer.className = 'space-y-3';
+                    itemListContainer.className = 'px-3 pb-3 pt-1 space-y-2';
                     
                     grouped[category].forEach(item => {
                         const { estimatedAmount: estimated = 0, totalAmount: actual = 0, deposit = 0 } = item;
@@ -779,13 +783,14 @@
                         const payerBadge = { groom: 'bg-sky-100 text-sky-800', bride: 'bg-rose-100 text-rose-800', joint: 'bg-green-100 text-green-800'}[item.payer];
                         const payerText = { groom: '민웅', bride: '지은', joint: '공동'}[item.payer] || '공동';
                         const div = document.createElement('div');
-                        div.className = 'p-3 bg-gray-50 rounded-lg';
+                        div.className = 'p-3 bg-white rounded-lg shadow-sm';
                         div.innerHTML = `<div class="flex justify-between items-start"><div class="item-content flex-grow" onclick="editBudgetItem('${item.id}')"><p class="font-semibold">${item.item}</p><div class="mt-2 text-xs text-gray-600 space-y-1"><p><b>예상:</b> ${formatNumberWithCommas(estimated)}원</p><p><b>실제:</b> ${formatNumberWithCommas(actual)}원 (계약금: ${formatNumberWithCommas(deposit)} / 잔금: ${formatNumberWithCommas(balance)})</p></div></div><div class="text-right ml-2 flex flex-col items-end flex-shrink-0"><div class="mb-2"><span class="text-xs font-semibold px-2 py-1 rounded-full ${payerBadge}">${payerText}</span></div><button onclick="event.stopPropagation(); deleteItem('budgets', '${item.id}')" class="text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button></div></div>`;
                         itemListContainer.appendChild(div);
                     });
 
-                    categoryDiv.appendChild(itemListContainer);
-                    list.appendChild(categoryDiv);
+                    details.appendChild(summary);
+                    details.appendChild(itemListContainer);
+                    list.appendChild(details);
                 }
             });
 
