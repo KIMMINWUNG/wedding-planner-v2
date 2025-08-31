@@ -603,7 +603,7 @@
         const handleTouchEnd = (e) => {
             let touchEndX = e.changedTouches[0].screenX;
             if (touchStartX - touchEndX > 50) { showNextPhoto(); } 
-            else if (touchEndX - touchStartX > 50) { showPrevPhoto(); }
+            else if (touchEndX - startX > 50) { showPrevPhoto(); }
         };
 
         window.openLightbox = (index) => {
@@ -658,7 +658,7 @@
 
         function loadTabContent(tabName) {
             const container = document.getElementById(tabName);
-            if (tabName === 'checklist') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">준비 목록</h2><button onclick="openModal('checklist', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-plus mr-1"></i>항목 추가</button></div><div id="checklist-container" class="space-y-4"></div></div>`;
+            if (tabName === 'checklist') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><h2 class="text-xl font-bold text-pink-500 mb-4">준비 목록</h2><div id="checklist-container"></div></div>`;
             else if (tabName === 'budget') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">예산 관리</h2><button onclick="openModal('budget', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-plus mr-1"></i>항목 추가</button></div><div id="budget-list"></div><div id="grand-total" class="mt-6"></div></div>`;
             else if (tabName === 'guests') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">하객 명단</h2><button onclick="openModal('guest', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-user-plus mr-1"></i>하객 추가</button></div><div class="space-y-6"><div id="groom-container"></div><div id="bride-container"></div></div></div>`;
             else if (tabName === 'photos') {
@@ -816,15 +816,30 @@
             const container = document.getElementById('checklist-container');
             if (!container) return;
             container.innerHTML = '';
+            container.className = 'space-y-3';
             const grouped = items.reduce((acc, item) => { const key = item.category || '기타'; if (!acc[key]) acc[key] = []; acc[key].push(item); return acc; }, {});
+            
             Object.keys(grouped).sort().forEach(category => {
-                const categoryDiv = document.createElement('div');
-                categoryDiv.innerHTML = `<div class="flex justify-between items-center border-b pb-2 mb-3"><h3 class="text-lg font-semibold">${category}</h3><button onclick="openModal('checklist', 'add', { category: '${category}' })" class="text-pink-500 hover:text-pink-700"><i class="fas fa-plus-circle"></i></button></div>`;
+                const details = document.createElement('details');
+                details.className = 'bg-gray-50 rounded-lg';
+
+                const summary = document.createElement('summary');
+                summary.className = 'p-3 font-semibold cursor-pointer flex items-center guest-summary';
+                const itemCount = grouped[category].length;
+
+                summary.innerHTML = `
+                    <span class="flex-grow text-lg">${category} (${itemCount})</span>
+                    <button onclick="event.preventDefault(); event.stopPropagation(); openModal('checklist', 'add', { category: '${category}' })" class="text-pink-500 hover:text-pink-700 text-xl ml-4">
+                        <i class="fas fa-plus-circle"></i>
+                    </button>
+                `;
+
                 const listContainer = document.createElement('div');
-                listContainer.className = 'space-y-2';
+                listContainer.className = 'px-3 pb-3 pt-1 space-y-2';
+
                 grouped[category].sort((a, b) => (a.order || 0) - (b.order || 0)).forEach(item => {
                     const div = document.createElement('div');
-                    div.className = 'draggable flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                    div.className = 'draggable flex items-center justify-between p-3 bg-white rounded-lg shadow-sm';
                     div.setAttribute('draggable', true);
                     div.dataset.id = item.id;
                     div.dataset.order = item.order;
@@ -835,13 +850,14 @@
                     if (item.location) detailsHTML += `<a href="https://map.naver.com/p/search/${encodeURIComponent(item.location)}" target="_blank" class="text-xs text-blue-500 hover:underline ${item.completed ? 'completed' : ''}" onclick="event.stopPropagation();"><i class="fas fa-map-marker-alt fa-fw mr-1"></i>${item.location}</a>`;
                     
                     div.innerHTML = `<div class="flex items-center flex-grow"><i class="fas fa-grip-vertical text-gray-300 mr-3 handle"></i><input type="checkbox" id="check-${item.id}" class="h-5 w-5 rounded border-gray-300 text-pink-600 focus:ring-pink-500" ${item.completed ? 'checked' : ''}><div class="ml-3 flex-grow item-content"><p class="${item.completed ? 'completed' : ''}">${item.text}</p><div class="mt-1 space-y-1">${detailsHTML}</div></div></div><button onclick="deleteItem('checklists', '${item.id}')" class="ml-2 text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button>`;
+                    
                     div.querySelector('input[type="checkbox"]').addEventListener('change', (e) => {
                         if (db && userId) {
                             updateDoc(doc(db, `artifacts/${appId}/public/data/checklists`, item.id), { completed: e.target.checked });
                         }
                     });
                     div.querySelector('.item-content').addEventListener('click', () => openModal('checklist', 'edit', item));
-                    // Drag and drop logic...
+                    
                     let draggedItem = null;
                     div.addEventListener('dragstart', (e) => { draggedItem = div; setTimeout(() => div.classList.add('dragging'), 0); });
                     div.addEventListener('dragend', () => div.classList.remove('dragging'));
@@ -860,8 +876,10 @@
                     });
                     listContainer.appendChild(div);
                 });
-                categoryDiv.appendChild(listContainer);
-                container.appendChild(categoryDiv);
+
+                details.appendChild(summary);
+                details.appendChild(listContainer);
+                container.appendChild(details);
             });
         };
         window.renderGuests = function(items) {
