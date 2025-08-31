@@ -35,11 +35,11 @@
         input[type=number] {
           -moz-appearance: textfield;
         }
-        /* Guest list accordion style */
+        /* Accordion style */
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
-        details > summary::after { content: '▸'; float: right; transition: transform 0.2s; margin-left: auto; }
-        details[open] > summary::after { transform: rotate(90deg); }
+        details > summary.guest-summary::after { content: '▸'; float: right; transition: transform 0.2s; margin-left: auto; }
+        details[open] > summary.guest-summary::after { transform: rotate(90deg); }
     </style>
 </head>
 <body class="text-gray-800">
@@ -293,7 +293,6 @@
             }
         };
         
-        // --- [NEW] Guest Modal Helper ---
         window.addGuestNameField = () => {
             const container = document.getElementById('guest-names-container');
             const newEntry = document.createElement('div');
@@ -326,8 +325,27 @@
                 flatpickr("#checklistItemDate", { enableTime: true, dateFormat: "Y-m-d H:i" });
             } else if (type === 'budget') {
                 title.textContent = isEdit ? '예산 항목 수정' : '새 예산 항목';
-                form.innerHTML = `<input type="hidden" id="itemId" value="${item.id || ''}"><div><label class="block text-sm font-medium">항목</label><input type="text" id="budgetItem" value="${item.item || ''}" class="mt-1 w-full p-2 border rounded" required></div><div><label class="block text-sm font-medium text-blue-600">예상 금액</label><div class="mt-1 flex items-center"><button type="button" onclick="adjustBudget('budgetEstimated', -10000)" class="px-3 py-2 border rounded-l-md bg-gray-50">-</button><input type="text" inputmode="numeric" id="budgetEstimated" value="${formatNumberWithCommas(item.estimatedAmount || '')}" oninput="handleNumberInput(event)" class="w-full p-2 border-t border-b text-center" placeholder="총 예상 금액"><button type="button" onclick="adjustBudget('budgetEstimated', 10000)" class="px-3 py-2 border rounded-r-md bg-gray-50">+</button></div></div><hr class="my-3"><p class="text-sm font-medium text-pink-600">실제 지출</p><div><label class="block text-xs font-medium">실제 총액</label><div class="mt-1 flex items-center"><button type="button" onclick="adjustBudget('budgetTotal', -10000)" class="px-3 py-2 border rounded-l-md bg-gray-50">-</button><input type="text" inputmode="numeric" id="budgetTotal" value="${formatNumberWithCommas(item.totalAmount || 0)}" oninput="handleNumberInput(event)" class="w-full p-2 border-t border-b text-center"><button type="button" onclick="adjustBudget('budgetTotal', 10000)" class="px-3 py-2 border rounded-r-md bg-gray-50">+</button></div></div><div><label class="block text-xs font-medium">계약금</label><div class="mt-1 flex items-center"><button type="button" onclick="adjustBudget('budgetDeposit', -10000)" class="px-3 py-2 border rounded-l-md bg-gray-50">-</button><input type="text" inputmode="numeric" id="budgetDeposit" value="${formatNumberWithCommas(item.deposit || 0)}" oninput="handleNumberInput(event)" class="w-full p-2 border-t border-b text-center"><button type="button" onclick="adjustBudget('budgetDeposit', 10000)" class="px-3 py-2 border rounded-r-md bg-gray-50">+</button></div></div><div><label class="block text-xs font-medium">지불</label><select id="budgetPayer" class="mt-1 w-full p-2 border rounded"><option value="joint">공동</option><option value="groom">민웅</option><option value="bride">지은</option></select></div>`;
-                if(isEdit) document.getElementById('budgetPayer').value = item.payer;
+                form.innerHTML = `
+                    <input type="hidden" id="itemId" value="${item.id || ''}">
+                    <div><label class="block text-sm font-medium">카테고리</label>
+                        <select id="budgetCategory" class="mt-1 w-full p-2 border rounded">
+                            <option value="웨딩홀">웨딩홀</option>
+                            <option value="예단, 예물">예단, 예물</option>
+                            <option value="신혼여행">신혼여행</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    <div><label class="block text-sm font-medium">항목</label><input type="text" id="budgetItem" value="${item.item || ''}" class="mt-1 w-full p-2 border rounded" required></div>
+                    <div><label class="block text-sm font-medium text-blue-600">예상 금액</label><div class="mt-1 flex items-center"><button type="button" onclick="adjustBudget('budgetEstimated', -10000)" class="px-3 py-2 border rounded-l-md bg-gray-50">-</button><input type="text" inputmode="numeric" id="budgetEstimated" value="${formatNumberWithCommas(item.estimatedAmount || '')}" oninput="handleNumberInput(event)" class="w-full p-2 border-t border-b text-center" placeholder="총 예상 금액"><button type="button" onclick="adjustBudget('budgetEstimated', 10000)" class="px-3 py-2 border rounded-r-md bg-gray-50">+</button></div></div>
+                    <hr class="my-3">
+                    <p class="text-sm font-medium text-pink-600">실제 지출</p>
+                    <div><label class="block text-xs font-medium">실제 총액</label><div class="mt-1 flex items-center"><button type="button" onclick="adjustBudget('budgetTotal', -10000)" class="px-3 py-2 border rounded-l-md bg-gray-50">-</button><input type="text" inputmode="numeric" id="budgetTotal" value="${formatNumberWithCommas(item.totalAmount || 0)}" oninput="handleNumberInput(event)" class="w-full p-2 border-t border-b text-center"><button type="button" onclick="adjustBudget('budgetTotal', 10000)" class="px-3 py-2 border rounded-r-md bg-gray-50">+</button></div></div>
+                    <div><label class="block text-xs font-medium">계약금</label><div class="mt-1 flex items-center"><button type="button" onclick="adjustBudget('budgetDeposit', -10000)" class="px-3 py-2 border rounded-l-md bg-gray-50">-</button><input type="text" inputmode="numeric" id="budgetDeposit" value="${formatNumberWithCommas(item.deposit || 0)}" oninput="handleNumberInput(event)" class="w-full p-2 border-t border-b text-center"><button type="button" onclick="adjustBudget('budgetDeposit', 10000)" class="px-3 py-2 border rounded-r-md bg-gray-50">+</button></div></div>
+                    <div><label class="block text-xs font-medium">지불</label><select id="budgetPayer" class="mt-1 w-full p-2 border rounded"><option value="joint">공동</option><option value="groom">민웅</option><option value="bride">지은</option></select></div>`;
+                if(isEdit) {
+                    document.getElementById('budgetPayer').value = item.payer || 'joint';
+                    document.getElementById('budgetCategory').value = item.category || '기타';
+                }
             } else if (type === 'guest') {
                 title.textContent = isEdit ? '하객 정보 수정' : '새 하객 추가';
                 let formHTML = `
@@ -384,7 +402,6 @@
             
             document.getElementById('confirm-message').textContent = message;
             
-            // For guest duplicates, change button text.
             if (message.includes('중복된 하객')) {
                 okBtn.textContent = '추가';
                 cancelBtn.textContent = '취소';
@@ -493,6 +510,7 @@
                     }
                 } else if (type === 'budget') {
                     const data = {
+                        category: document.getElementById('budgetCategory').value,
                         item: document.getElementById('budgetItem').value.trim(),
                         estimatedAmount: parseFormattedNumber(document.getElementById('budgetEstimated').value),
                         totalAmount: parseFormattedNumber(document.getElementById('budgetTotal').value),
@@ -550,7 +568,7 @@
                         }
                         await processSave();
                     }
-                    return; // Return because closeModal is handled inside the logic.
+                    return;
                 }
             } catch (e) {
                 console.error("저장 중 오류 발생: ", e);
@@ -641,7 +659,7 @@
         function loadTabContent(tabName) {
             const container = document.getElementById(tabName);
             if (tabName === 'checklist') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">준비 목록</h2><button onclick="openModal('checklist', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-plus mr-1"></i>항목 추가</button></div><div id="checklist-container" class="space-y-4"></div></div>`;
-            else if (tabName === 'budget') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">예산 관리</h2><button onclick="openModal('budget', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-plus mr-1"></i>항목 추가</button></div><div id="budget-list" class="space-y-3"></div><div id="grand-total" class="mt-6 text-right text-lg"></div></div>`;
+            else if (tabName === 'budget') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">예산 관리</h2><button onclick="openModal('budget', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-plus mr-1"></i>항목 추가</button></div><div id="budget-list"></div><div id="grand-total" class="mt-6"></div></div>`;
             else if (tabName === 'guests') container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-pink-500">하객 명단</h2><button onclick="openModal('guest', 'add')" class="bg-pink-500 text-white px-3 py-2 rounded-lg hover:bg-pink-600 text-sm"><i class="fas fa-user-plus mr-1"></i>하객 추가</button></div><div class="space-y-6"><div id="groom-container"></div><div id="bride-container"></div></div></div>`;
             else if (tabName === 'photos') {
                 container.innerHTML = `<div class="bg-white p-4 rounded-lg shadow-md">
@@ -695,23 +713,104 @@
         // --- 렌더링 함수들 ---
         window.renderBudget = function(items) {
             const list = document.getElementById('budget-list');
-            if (!list) return;
-            list.innerHTML = '';
-            let totalEstimated = 0, totalActual = 0;
-            items.forEach(item => {
-                const { estimatedAmount: estimated = 0, totalAmount: actual = 0, deposit = 0 } = item;
-                const balance = actual - deposit;
-                totalEstimated += estimated;
-                totalActual += actual;
-                const payerBadge = { groom: 'bg-sky-100 text-sky-800', bride: 'bg-rose-100 text-rose-800', joint: 'bg-green-100 text-green-800'}[item.payer];
-                const payerText = { groom: '민웅', bride: '지은', joint: '공동'}[item.payer] || '공동';
-                const div = document.createElement('div');
-                div.className = 'p-3 bg-gray-50 rounded-lg';
-                div.innerHTML = `<div class="flex justify-between items-start"><div class="item-content flex-grow" onclick="editBudgetItem('${item.id}')"><p class="font-semibold">${item.item}</p><div class="mt-2 text-xs text-gray-600 space-y-1"><p><b>예상:</b> ${formatNumberWithCommas(estimated)}원</p><p><b>실제:</b> ${formatNumberWithCommas(actual)}원 (계약금: ${formatNumberWithCommas(deposit)} / 잔금: ${formatNumberWithCommas(balance)})</p></div></div><div class="text-right ml-2 flex flex-col items-end flex-shrink-0"><div class="mb-2"><span class="text-xs font-semibold px-2 py-1 rounded-full ${payerBadge}">${payerText}</span></div><button onclick="event.stopPropagation(); deleteItem('budgets', '${item.id}')" class="text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button></div></div>`;
-                list.appendChild(div);
-            });
             const grandTotalDiv = document.getElementById('grand-total');
-            if (grandTotalDiv) grandTotalDiv.innerHTML = `<p>총 예상: <span class="font-bold">${formatNumberWithCommas(totalEstimated)}원</span></p><p>총 지출: <span class="font-bold text-pink-600">${formatNumberWithCommas(totalActual)}원</span></p>`;
+            if (!list || !grandTotalDiv) return;
+
+            list.innerHTML = '';
+            
+            const totals = {
+                all: { estimated: 0, actual: 0 },
+                groom: { estimated: 0, actual: 0 },
+                bride: { estimated: 0, actual: 0 },
+            };
+
+            items.forEach(item => {
+                const estimated = item.estimatedAmount || 0;
+                const actual = item.totalAmount || 0;
+                
+                totals.all.estimated += estimated;
+                totals.all.actual += actual;
+
+                if (item.payer === 'groom') {
+                    totals.groom.estimated += estimated;
+                    totals.groom.actual += actual;
+                } else if (item.payer === 'bride') {
+                    totals.bride.estimated += estimated;
+                    totals.bride.actual += actual;
+                } else { // 'joint' or undefined
+                    totals.groom.estimated += estimated / 2;
+                    totals.groom.actual += actual / 2;
+                    totals.bride.estimated += estimated / 2;
+                    totals.bride.actual += actual / 2;
+                }
+            });
+
+            const categoryOrder = ['웨딩홀', '예단, 예물', '신혼여행', '기타'];
+            const grouped = items.reduce((acc, item) => {
+                const key = item.category || '기타';
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(item);
+                return acc;
+            }, {});
+
+            categoryOrder.forEach(category => {
+                if (grouped[category]) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'mb-6';
+                    
+                    const categoryTotalEstimated = grouped[category].reduce((sum, item) => sum + (item.estimatedAmount || 0), 0);
+                    const categoryTotalActual = grouped[category].reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+
+                    categoryDiv.innerHTML = `
+                        <div class="flex justify-between items-center border-b pb-2 mb-3">
+                            <h3 class="text-lg font-semibold">${category}</h3>
+                            <div class="text-sm text-right">
+                                <p>예상: ${formatNumberWithCommas(categoryTotalEstimated)}원</p>
+                                <p>지출: ${formatNumberWithCommas(categoryTotalActual)}원</p>
+                            </div>
+                        </div>`;
+                    
+                    const itemListContainer = document.createElement('div');
+                    itemListContainer.className = 'space-y-3';
+                    
+                    grouped[category].forEach(item => {
+                        const { estimatedAmount: estimated = 0, totalAmount: actual = 0, deposit = 0 } = item;
+                        const balance = actual - deposit;
+                        const payerBadge = { groom: 'bg-sky-100 text-sky-800', bride: 'bg-rose-100 text-rose-800', joint: 'bg-green-100 text-green-800'}[item.payer];
+                        const payerText = { groom: '민웅', bride: '지은', joint: '공동'}[item.payer] || '공동';
+                        const div = document.createElement('div');
+                        div.className = 'p-3 bg-gray-50 rounded-lg';
+                        div.innerHTML = `<div class="flex justify-between items-start"><div class="item-content flex-grow" onclick="editBudgetItem('${item.id}')"><p class="font-semibold">${item.item}</p><div class="mt-2 text-xs text-gray-600 space-y-1"><p><b>예상:</b> ${formatNumberWithCommas(estimated)}원</p><p><b>실제:</b> ${formatNumberWithCommas(actual)}원 (계약금: ${formatNumberWithCommas(deposit)} / 잔금: ${formatNumberWithCommas(balance)})</p></div></div><div class="text-right ml-2 flex flex-col items-end flex-shrink-0"><div class="mb-2"><span class="text-xs font-semibold px-2 py-1 rounded-full ${payerBadge}">${payerText}</span></div><button onclick="event.stopPropagation(); deleteItem('budgets', '${item.id}')" class="text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button></div></div>`;
+                        itemListContainer.appendChild(div);
+                    });
+
+                    categoryDiv.appendChild(itemListContainer);
+                    list.appendChild(categoryDiv);
+                }
+            });
+
+            grandTotalDiv.innerHTML = `
+                <details class="text-right text-lg cursor-pointer">
+                    <summary class="list-none">
+                        <p>총 예상: <span class="font-bold">${formatNumberWithCommas(totals.all.estimated)}원</span></p>
+                        <p>총 지출: <span class="font-bold text-pink-600">${formatNumberWithCommas(totals.all.actual)}원</span></p>
+                        <p class="text-xs text-gray-500 mt-1">(자세히 보려면 클릭)</p>
+                    </summary>
+                    <div class="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-left shadow-inner">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="font-semibold text-sky-600">🤵 민웅</p>
+                                <p>예상: ${formatNumberWithCommas(totals.groom.estimated)}원</p>
+                                <p>지출: ${formatNumberWithCommas(totals.groom.actual)}원</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-rose-500">👰 지은</p>
+                                <p>예상: ${formatNumberWithCommas(totals.bride.estimated)}원</p>
+                                <p>지출: ${formatNumberWithCommas(totals.bride.actual)}원</p>
+                            </div>
+                        </div>
+                    </div>
+                </details>`;
         };
         window.renderChecklist = function(items) {
             const container = document.getElementById('checklist-container');
@@ -791,7 +890,7 @@
                 const sideColor = side === 'groom' ? 'text-sky-600' : 'text-rose-500';
 
                 const sideDetails = document.createElement('details');
-                sideDetails.innerHTML = `<summary class="text-lg font-semibold mb-2 ${sideColor} cursor-pointer flex justify-between items-center"><h3>${sideTitle}</h3></summary>`;
+                sideDetails.innerHTML = `<summary class="text-lg font-semibold mb-2 ${sideColor} cursor-pointer flex justify-between items-center guest-summary"><h3>${sideTitle}</h3></summary>`;
                 
                 const relationListContainer = document.createElement('div');
                 relationListContainer.className = 'space-y-3 pl-4';
@@ -810,7 +909,7 @@
                         details.className = 'bg-gray-50 rounded-lg';
                         
                         const summary = document.createElement('summary');
-                        summary.className = 'p-3 font-semibold cursor-pointer flex justify-between items-center';
+                        summary.className = 'p-3 font-semibold cursor-pointer flex justify-between items-center guest-summary';
                         summary.innerHTML = `<span>${relationText[relationKey]} (${guestsInRelation.length}명)</span>`;
                         
                         const listDiv = document.createElement('div');
