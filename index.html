@@ -64,7 +64,7 @@
         .tab-button { 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            min-height: 64px;
+            min-height: 54px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -435,8 +435,8 @@
             <!-- Header -->
             <header class="text-center mb-8">
                 <div class="mb-6">
-                    <h1 class="font-handwriting text-5xl md:text-6xl font-bold mb-3">Minwung & Jieun</h1>
-                    <p class="text-lg text-gray-600 mb-4">우리가 함께 만드는 결혼 이야기</p>
+                    <h1 class="font-handwriting text-4xl md:text-5xl font-bold mb-3" style="line-height: 1.2;">Minwung & Jieun</h1>
+                    <p class="text-base md:text-lg text-gray-600 mb-4">우리가 함께 만드는 결혼 이야기</p>
                     <div class="flex items-center justify-center space-x-2">
                         <div class="w-8 h-0.5 bg-gradient-to-r from-transparent to-wedding-pink rounded-full"></div>
                         <i class="fas fa-heart text-wedding-pink text-lg"></i>
@@ -444,13 +444,13 @@
                     </div>
                 </div>
                 
-                <div class="space-y-4">
-                    <div id="wedding-date-container" class="relative inline-block group cursor-pointer">
-                        <div id="d-day-counter" class="dday-counter text-xl font-semibold">...</div>
-                        <div id="wedding-date-display" class="text-sm text-gray-500 mt-2"></div>
+                <div class="space-y-3 flex flex-col items-center">
+                    <div id="wedding-date-container" class="relative group cursor-pointer">
+                        <div id="d-day-counter" class="dday-counter text-lg md:text-xl font-semibold text-center">...</div>
+                        <div id="wedding-date-display" class="text-xs md:text-sm text-gray-500 mt-1 text-center"></div>
                         <input type="hidden" id="wedding-date-picker">
                     </div>
-                    <div id="days-together-counter" class="text-sm text-gray-600 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full inline-block">...</div>
+                    <div id="days-together-counter" class="text-xs md:text-sm text-gray-600 bg-white/60 backdrop-blur-sm px-3 py-1 rounded-full">...</div>
                 </div>
             </header>
 
@@ -458,21 +458,21 @@
             <div class="mb-6 sticky top-0 z-10 bg-gradient-to-b from-wedding-cream via-wedding-cream to-transparent pb-2">
                 <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-wedding-pink-light/30">
                     <nav class="grid grid-cols-4 gap-1" aria-label="Tabs">
-                        <button onclick="changeTab('checklist')" class="tab-button active text-center py-3 px-2 font-medium text-xs sm:text-sm rounded-xl">
-                            <i class="fas fa-check-square block text-lg mb-1"></i>
-                            <span class="block">체크리스트</span>
+                        <button onclick="changeTab('checklist')" class="tab-button active text-center py-2 px-1 font-medium text-xs rounded-xl">
+                            <i class="fas fa-check-square block text-base mb-1"></i>
+                            <span class="block text-xs leading-tight">체크리스트</span>
                         </button>
-                        <button onclick="changeTab('budget')" class="tab-button text-center py-3 px-2 font-medium text-xs sm:text-sm rounded-xl">
-                            <i class="fas fa-coins block text-lg mb-1"></i>
-                            <span class="block">예산관리</span>
+                        <button onclick="changeTab('budget')" class="tab-button text-center py-2 px-1 font-medium text-xs rounded-xl">
+                            <i class="fas fa-coins block text-base mb-1"></i>
+                            <span class="block text-xs leading-tight">예산관리</span>
                         </button>
-                        <button onclick="changeTab('guests')" class="tab-button text-center py-3 px-2 font-medium text-xs sm:text-sm rounded-xl">
-                            <i class="fas fa-users block text-lg mb-1"></i>
-                            <span class="block">하객관리</span>
+                        <button onclick="changeTab('guests')" class="tab-button text-center py-2 px-1 font-medium text-xs rounded-xl">
+                            <i class="fas fa-users block text-base mb-1"></i>
+                            <span class="block text-xs leading-tight">하객관리</span>
                         </button>
-                        <button onclick="changeTab('photos')" class="tab-button text-center py-3 px-2 font-medium text-xs sm:text-sm rounded-xl">
-                            <i class="fas fa-images block text-lg mb-1"></i>
-                            <span class="block">사진첩</span>
+                        <button onclick="changeTab('photos')" class="tab-button text-center py-2 px-1 font-medium text-xs rounded-xl">
+                            <i class="fas fa-images block text-base mb-1"></i>
+                            <span class="block text-xs leading-tight">사진첩</span>
                         </button>
                     </nav>
                 </div>
@@ -736,9 +736,22 @@
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-tag mr-2 text-wedding-pink"></i>카테고리
+                            <i class="fas fa-tag mr-2 text-wedding-pink"></i>대분류 카테고리
                         </label>
-                        <input type="text" id="checklistItemCategory" value="${item.category || ''}" class="form-input w-full" placeholder="예: 웨딩홀, 드레스, 예물">
+                        <select id="checklistItemCategorySelect" class="form-input w-full mb-2">
+                            <option value="">-- 새 카테고리 만들기 --</option>
+                        </select>
+                        <input type="text" id="checklistItemCategory" value="${item.category || ''}" class="form-input w-full" placeholder="새 카테고리 이름 입력" style="display: none;">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-tags mr-2 text-wedding-pink"></i>중분류 (선택사항)
+                        </label>
+                        <select id="checklistItemSubCategorySelect" class="form-input w-full mb-2">
+                            <option value="">-- 중분류 없음 --</option>
+                            <option value="_new_">-- 새 중분류 만들기 --</option>
+                        </select>
+                        <input type="text" id="checklistItemSubCategory" value="${item.subCategory || ''}" class="form-input w-full" placeholder="새 중분류 이름 입력" style="display: none;">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -758,6 +771,89 @@
                         </label>
                         <input type="text" id="checklistItemLocation" placeholder="예: 창원 리베라 컨벤션" class="form-input w-full" value="${item.location || ''}">
                     </div>`;
+                
+                // 기존 카테고리 목록 추가
+                setTimeout(() => {
+                    const categorySelect = document.getElementById('checklistItemCategorySelect');
+                    const categoryInput = document.getElementById('checklistItemCategory');
+                    const subCategorySelect = document.getElementById('checklistItemSubCategorySelect');
+                    const subCategoryInput = document.getElementById('checklistItemSubCategory');
+                    
+                    // 기존 대분류 카테고리 추가
+                    const existingCategories = [...new Set(allChecklistItems.map(item => item.category).filter(Boolean))];
+                    existingCategories.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat;
+                        categorySelect.appendChild(option);
+                    });
+                    
+                    // 수정 모드일 때 기존 값 설정
+                    if (isEdit && item.category) {
+                        if (existingCategories.includes(item.category)) {
+                            categorySelect.value = item.category;
+                        } else {
+                            categorySelect.value = '';
+                            categoryInput.style.display = 'block';
+                            categoryInput.value = item.category;
+                        }
+                    }
+                    
+                    // 카테고리 선택 이벤트
+                    categorySelect.addEventListener('change', (e) => {
+                        if (e.target.value === '') {
+                            categoryInput.style.display = 'block';
+                            categoryInput.focus();
+                        } else {
+                            categoryInput.style.display = 'none';
+                            categoryInput.value = e.target.value;
+                            
+                            // 해당 카테고리의 중분류 업데이트
+                            updateSubCategories(e.target.value);
+                        }
+                    });
+                    
+                    // 중분류 선택 이벤트
+                    subCategorySelect.addEventListener('change', (e) => {
+                        if (e.target.value === '_new_') {
+                            subCategoryInput.style.display = 'block';
+                            subCategoryInput.focus();
+                        } else {
+                            subCategoryInput.style.display = 'none';
+                            subCategoryInput.value = e.target.value;
+                        }
+                    });
+                    
+                    function updateSubCategories(selectedCategory) {
+                        // 기존 중분류 옵션 제거 (기본 옵션 제외)
+                        while (subCategorySelect.children.length > 2) {
+                            subCategorySelect.removeChild(subCategorySelect.lastChild);
+                        }
+                        
+                        // 해당 대분류의 중분류들 추가
+                        const subCategories = [...new Set(allChecklistItems
+                            .filter(item => item.category === selectedCategory && item.subCategory)
+                            .map(item => item.subCategory))];
+                        
+                        subCategories.forEach(subCat => {
+                            const option = document.createElement('option');
+                            option.value = subCat;
+                            option.textContent = subCat;
+                            subCategorySelect.appendChild(option);
+                        });
+                    }
+                    
+                    // 수정 모드일 때 중분류도 설정
+                    if (isEdit && item.category) {
+                        updateSubCategories(item.category);
+                        if (item.subCategory) {
+                            setTimeout(() => {
+                                subCategorySelect.value = item.subCategory || '';
+                            }, 0);
+                        }
+                    }
+                }, 0);
+                
                 flatpickr("#checklistItemDate", { enableTime: true, dateFormat: "Y-m-d H:i" });
             } else if (type === 'budget') {
                 title.textContent = isEdit ? '예산 항목 수정' : '새 예산 항목';
@@ -987,9 +1083,13 @@
 
             try {
                 if (type === 'checklist') {
+                    const categoryInput = document.getElementById('checklistItemCategory');
+                    const subCategoryInput = document.getElementById('checklistItemSubCategory');
+                    
                     const data = {
                         text: document.getElementById('checklistItemText').value.trim(),
-                        category: document.getElementById('checklistItemCategory').value.trim() || '기타',
+                        category: categoryInput.value.trim() || '기타',
+                        subCategory: subCategoryInput.value.trim() || null,
                         date: document.getElementById('checklistItemDate').value.trim(),
                         memo: document.getElementById('checklistItemMemo').value.trim(),
                         location: document.getElementById('checklistItemLocation').value.trim()
@@ -1153,11 +1253,16 @@
             const container = document.getElementById(tabName);
             if (tabName === 'checklist') {
                 container.innerHTML = `<div class="card-enhanced p-6">
-                    <div class="flex items-center mb-6">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wedding-pink-light to-wedding-pink flex items-center justify-center mr-3">
-                            <i class="fas fa-check-square text-white"></i>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-wedding-pink-light to-wedding-pink flex items-center justify-center mr-3">
+                                <i class="fas fa-check-square text-white"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-wedding-pink-dark">준비 목록</h2>
                         </div>
-                        <h2 class="text-2xl font-bold text-wedding-pink-dark">준비 목록</h2>
+                        <button onclick="openModal('checklist', 'add')" class="btn-primary text-sm">
+                            <i class="fas fa-plus mr-2"></i>추가
+                        </button>
                     </div>
                     <div id="checklist-container"></div>
                 </div>`;
@@ -1254,7 +1359,7 @@
             if (!list || !grandTotalDiv) return;
 
             list.innerHTML = '';
-            list.className = 'space-y-3';
+            list.className = 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3';
             
             const totals = {
                 all: { estimated: 0, actual: 0 },
@@ -1283,103 +1388,201 @@
                 }
             });
 
-            const categoryOrder = ['웨딩홀', '예단, 예물', '신혼여행', '기타'];
-            const grouped = items.reduce((acc, item) => {
-                const key = item.category || '기타';
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(item);
-                return acc;
-            }, {});
-
-            categoryOrder.forEach(category => {
-                if (grouped[category]) {
-                    const details = document.createElement('details');
-                    details.className = 'bg-gray-50 rounded-lg';
-
-                    const summary = document.createElement('summary');
-                    summary.className = 'p-3 font-semibold cursor-pointer flex items-center guest-summary';
-                    const itemCount = grouped[category].length;
-                    
-                    const categoryTotalEstimated = grouped[category].reduce((sum, item) => sum + (item.estimatedAmount || 0), 0);
-                    const categoryTotalActual = grouped[category].reduce((sum, item) => sum + (item.totalAmount || 0), 0);
-
-                    summary.innerHTML = `
-                        <span class="flex-grow text-lg">${category} (${itemCount})</span>
-                        <div class="text-sm text-right">
-                            <p>예상: ${formatNumberWithCommas(categoryTotalEstimated)}원</p>
-                            <p>지출: ${formatNumberWithCommas(categoryTotalActual)}원</p>
-                        </div>
-                    `;
-                    
-                    const itemListContainer = document.createElement('div');
-                    itemListContainer.className = 'px-3 pb-3 pt-1 space-y-2';
-                    
-                    grouped[category].forEach(item => {
-                        const { estimatedAmount: estimated = 0, totalAmount: actual = 0, deposit = 0 } = item;
-                        const balance = actual - deposit;
-                        const payerBadge = { groom: 'bg-sky-100 text-sky-800', bride: 'bg-rose-100 text-rose-800', joint: 'bg-green-100 text-green-800'}[item.payer];
-                        const payerText = { groom: '민웅', bride: '지은', joint: '공동'}[item.payer] || '공동';
-                        const div = document.createElement('div');
-                        div.className = 'p-3 bg-white rounded-lg shadow-sm';
-                        div.innerHTML = `<div class="flex justify-between items-start"><div class="item-content flex-grow" onclick="editBudgetItem('${item.id}')"><p class="font-semibold">${item.item}</p><div class="mt-2 text-xs text-gray-600 space-y-1"><p><b>예상:</b> ${formatNumberWithCommas(estimated)}원</p><p><b>실제:</b> ${formatNumberWithCommas(actual)}원 (계약금: ${formatNumberWithCommas(deposit)} / 잔금: ${formatNumberWithCommas(balance)})</p></div></div><div class="text-right ml-2 flex flex-col items-end flex-shrink-0"><div class="mb-2"><span class="text-xs font-semibold px-2 py-1 rounded-full ${payerBadge}">${payerText}</span></div><button onclick="event.stopPropagation(); deleteItem('budgets', '${item.id}')" class="text-gray-400 hover:text-red-500"><i class="fas fa-trash-alt fa-sm"></i></button></div></div>`;
-                        itemListContainer.appendChild(div);
-                    });
-
-                    details.appendChild(summary);
-                    details.appendChild(itemListContainer);
-                    list.appendChild(details);
+            // 각 항목을 개별 카드로 렌더링
+            items.forEach(item => {
+                const { estimatedAmount: estimated = 0, totalAmount: actual = 0, deposit = 0 } = item;
+                const balance = actual - deposit;
+                const paymentProgress = actual > 0 ? (deposit / actual * 100) : 0;
+                
+                // 예산 비교 계산
+                const budgetDiff = actual - estimated;
+                const budgetDiffPercent = estimated > 0 ? (budgetDiff / estimated * 100) : 0;
+                
+                // 상태 결정
+                let statusColor = 'gray';
+                let statusText = '미정';
+                let statusIcon = 'fas fa-clock';
+                
+                if (actual > 0) {
+                    if (budgetDiffPercent <= -5) {
+                        statusColor = 'green';
+                        statusText = `${Math.abs(budgetDiffPercent).toFixed(0)}% 절약!`;
+                        statusIcon = 'fas fa-arrow-down';
+                    } else if (budgetDiffPercent <= 10) {
+                        statusColor = 'blue';
+                        statusText = '예산 내';
+                        statusIcon = 'fas fa-check-circle';
+                    } else {
+                        statusColor = 'red';
+                        statusText = `${budgetDiffPercent.toFixed(0)}% 초과`;
+                        statusIcon = 'fas fa-arrow-up';
+                    }
                 }
+                
+                // 카테고리 아이콘
+                const categoryIcons = {
+                    '웨딩홀': '🏛️',
+                    '예단, 예물': '💍',
+                    '신혼여행': '✈️',
+                    '기타': '📝'
+                };
+                
+                const payerBadge = { 
+                    groom: 'bg-sky-100 text-sky-800', 
+                    bride: 'bg-rose-100 text-rose-800', 
+                    joint: 'bg-green-100 text-green-800'
+                }[item.payer] || 'bg-green-100 text-green-800';
+                
+                const payerText = { 
+                    groom: '🤵 민웅', 
+                    bride: '👰 지은', 
+                    joint: '👫 공동'
+                }[item.payer] || '👫 공동';
+                
+                const card = document.createElement('div');
+                card.className = 'card-enhanced p-4 hover:shadow-lg transition-all duration-300 cursor-pointer';
+                card.onclick = () => editBudgetItem(item.id);
+                
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center">
+                            <span class="text-2xl mr-2">${categoryIcons[item.category] || '📝'}</span>
+                            <div>
+                                <h3 class="font-bold text-gray-800 text-sm leading-tight">${item.item}</h3>
+                                <span class="text-xs px-2 py-1 rounded-full ${payerBadge} mt-1 inline-block">${payerText}</span>
+                            </div>
+                        </div>
+                        <button onclick="event.stopPropagation(); deleteItem('budgets', '${item.id}')" 
+                                class="text-gray-400 hover:text-red-500 p-1 rounded transition-colors">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500">예상</span>
+                            <span class="font-semibold text-gray-700">${formatNumberWithCommas(estimated)}원</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500">실제</span>
+                            <span class="font-bold text-lg">${formatNumberWithCommas(actual)}원</span>
+                        </div>
+                    </div>
+                    
+                    ${actual > 0 ? `
+                        <div class="mb-3">
+                            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                <span>결제 진행률</span>
+                                <span>${paymentProgress.toFixed(0)}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-wedding-pink to-wedding-pink-dark h-2 rounded-full transition-all duration-500" 
+                                     style="width: ${Math.min(paymentProgress, 100)}%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>계약금: ${formatNumberWithCommas(deposit)}원</span>
+                                <span>잔금: ${formatNumberWithCommas(balance)}원</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex items-center justify-center py-2 rounded-lg ${
+                        statusColor === 'green' ? 'bg-green-50 text-green-700' :
+                        statusColor === 'blue' ? 'bg-blue-50 text-blue-700' :
+                        statusColor === 'red' ? 'bg-red-50 text-red-700' :
+                        'bg-gray-50 text-gray-500'
+                    }">
+                        <i class="${statusIcon} mr-2 text-sm"></i>
+                        <span class="font-medium text-sm">${statusText}</span>
+                    </div>
+                `;
+                
+                list.appendChild(card);
             });
 
+            // 전체 통계 카드도 개선
             grandTotalDiv.innerHTML = `
-                <details class="text-right text-lg cursor-pointer">
-                    <summary class="list-none">
-                        <p>총 예상: <span class="font-bold">${formatNumberWithCommas(totals.all.estimated)}원</span></p>
-                        <p>총 지출: <span class="font-bold text-pink-600">${formatNumberWithCommas(totals.all.actual)}원</span></p>
-                        <p class="text-xs text-gray-500 mt-1">(자세히 보려면 클릭)</p>
-                    </summary>
-                    <div class="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-left shadow-inner">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="font-semibold text-sky-600">🤵 민웅</p>
-                                <p>예상: ${formatNumberWithCommas(totals.groom.estimated)}원</p>
-                                <p>지출: ${formatNumberWithCommas(totals.groom.actual)}원</p>
+                <div class="card-enhanced p-6 bg-gradient-to-br from-wedding-pink-light to-white">
+                    <div class="text-center mb-4">
+                        <h3 class="text-xl font-bold text-wedding-pink-dark mb-2">💰 전체 예산 현황</h3>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="bg-white/60 rounded-lg p-3">
+                                <p class="text-xs text-gray-500">총 예상</p>
+                                <p class="font-bold text-lg text-gray-700">${formatNumberWithCommas(totals.all.estimated)}원</p>
                             </div>
-                            <div>
-                                <p class="font-semibold text-rose-500">👰 지은</p>
-                                <p>예상: ${formatNumberWithCommas(totals.bride.estimated)}원</p>
-                                <p>지출: ${formatNumberWithCommas(totals.bride.actual)}원</p>
+                            <div class="bg-white/60 rounded-lg p-3">
+                                <p class="text-xs text-gray-500">총 지출</p>
+                                <p class="font-bold text-lg text-wedding-pink-dark">${formatNumberWithCommas(totals.all.actual)}원</p>
                             </div>
                         </div>
                     </div>
-                </details>`;
+                    
+                    <details class="cursor-pointer">
+                        <summary class="text-center text-sm text-gray-600 hover:text-wedding-pink-dark transition-colors">
+                            👫 개별 부담 현황 보기 ▼
+                        </summary>
+                        <div class="mt-4 grid grid-cols-2 gap-3">
+                            <div class="bg-sky-50 rounded-lg p-3 text-center">
+                                <p class="font-semibold text-sky-700 mb-1">🤵 민웅</p>
+                                <p class="text-xs text-gray-600">예상: ${formatNumberWithCommas(totals.groom.estimated)}원</p>
+                                <p class="text-sm font-bold text-sky-700">지출: ${formatNumberWithCommas(totals.groom.actual)}원</p>
+                            </div>
+                            <div class="bg-rose-50 rounded-lg p-3 text-center">
+                                <p class="font-semibold text-rose-600 mb-1">👰 지은</p>
+                                <p class="text-xs text-gray-600">예상: ${formatNumberWithCommas(totals.bride.estimated)}원</p>
+                                <p class="text-sm font-bold text-rose-600">지출: ${formatNumberWithCommas(totals.bride.actual)}원</p>
+                            </div>
+                        </div>
+                    </details>
+                </div>`;
         };
         window.renderChecklist = function(items) {
             const container = document.getElementById('checklist-container');
             if (!container) return;
             container.innerHTML = '';
             container.className = 'space-y-3';
-            const grouped = items.reduce((acc, item) => { const key = item.category || '기타'; if (!acc[key]) acc[key] = []; acc[key].push(item); return acc; }, {});
+            const grouped = items.reduce((acc, item) => { 
+                const key = item.category || '기타'; 
+                if (!acc[key]) acc[key] = {}; 
+                const subKey = item.subCategory || '기본';
+                if (!acc[key][subKey]) acc[key][subKey] = [];
+                acc[key][subKey].push(item);
+                return acc; 
+            }, {});
             
             Object.keys(grouped).sort().forEach(category => {
+                const categoryData = grouped[category];
+                const totalItemCount = Object.values(categoryData).flat().length;
+                
                 const details = document.createElement('details');
                 details.className = 'bg-gray-50 rounded-lg';
 
                 const summary = document.createElement('summary');
                 summary.className = 'p-3 font-semibold cursor-pointer flex items-center guest-summary';
-                const itemCount = grouped[category].length;
 
                 summary.innerHTML = `
-                    <span class="flex-grow text-lg">${category} (${itemCount})</span>
-                    <button onclick="event.preventDefault(); event.stopPropagation(); openModal('checklist', 'add', { category: '${category}' })" class="text-pink-500 hover:text-pink-700 text-xl ml-4">
-                        <i class="fas fa-plus-circle"></i>
-                    </button>
+                    <span class="flex-grow text-lg">${category} (${totalItemCount})</span>
                 `;
 
-                const listContainer = document.createElement('div');
-                listContainer.className = 'px-3 pb-3 pt-1 space-y-2';
+                const categoryContainer = document.createElement('div');
+                categoryContainer.className = 'px-3 pb-3 pt-1 space-y-3';
 
-                grouped[category].sort((a, b) => (a.order || 0) - (b.order || 0)).forEach(item => {
+                // 중분류별로 처리
+                Object.keys(categoryData).sort().forEach(subCategory => {
+                    const subCategoryItems = categoryData[subCategory];
+                    
+                    if (subCategory !== '기본') {
+                        // 중분류 제목 추가
+                        const subTitle = document.createElement('div');
+                        subTitle.className = 'text-sm font-medium text-gray-600 mt-3 mb-2 pl-2 border-l-3 border-wedding-pink-light';
+                        subTitle.textContent = `${subCategory} (${subCategoryItems.length})`;
+                        categoryContainer.appendChild(subTitle);
+                    }
+                    
+                    const listContainer = document.createElement('div');
+                    listContainer.className = 'space-y-2';
+
+                    subCategoryItems.sort((a, b) => (a.order || 0) - (b.order || 0)).forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'draggable flex items-center justify-between p-3 bg-white rounded-lg shadow-sm';
                     div.setAttribute('draggable', true);
@@ -1416,11 +1619,14 @@
                         await updateDoc(doc(db, `artifacts/${appId}/public/data/checklists`, draggedItem.dataset.id), { order: newOrder });
                         draggedItem = null;
                     });
-                    listContainer.appendChild(div);
+                        listContainer.appendChild(div);
+                    });
+                    
+                    categoryContainer.appendChild(listContainer);
                 });
 
                 details.appendChild(summary);
-                details.appendChild(listContainer);
+                details.appendChild(categoryContainer);
                 container.appendChild(details);
             });
         };
