@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#D98BA0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="웨딩플래너">
     <title>민웅 ❤️ 지은 웨딩 플래너</title>
@@ -632,6 +632,8 @@
         };
 
         const correctPassword = '0719';
+        
+        // checkPassword 함수를 전역으로 정의
         window.checkPassword = function() {
             const input = document.getElementById('password-input');
             if (input.value === correctPassword) {
@@ -646,7 +648,7 @@
                 input.value = '';
                 input.focus();
             }
-        }
+        };
 
         async function initializeFirebase() {
             if (isFirebaseInitialized) return;
