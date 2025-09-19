@@ -633,8 +633,8 @@
 
         const correctPassword = '0719';
         
-        // checkPassword 함수를 전역으로 정의
-        window.checkPassword = function() {
+        // checkPassword 함수를 전역으로 정의 (HTML 로드 전에)
+        function checkPassword() {
             const input = document.getElementById('password-input');
             if (input.value === correctPassword) {
                 document.getElementById('password-gate').classList.add('hidden');
@@ -648,7 +648,10 @@
                 input.value = '';
                 input.focus();
             }
-        };
+        }
+        
+        // 전역으로 노출
+        window.checkPassword = checkPassword;
 
         async function initializeFirebase() {
             if (isFirebaseInitialized) return;
