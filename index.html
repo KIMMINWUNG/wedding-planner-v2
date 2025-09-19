@@ -793,7 +793,7 @@
                             <i class="fas fa-tag mr-2 text-wedding-pink"></i>대분류 카테고리
                         </label>
                         <select id="checklistItemCategorySelect" class="form-input w-full mb-2">
-                            <option value="">-- 새 카테고리 만들기 --</option>
+                            <option value="">📁 새 카테고리 만들기</option>
                         </select>
                         <input type="text" id="checklistItemCategory" value="${item.category || ''}" class="form-input w-full" placeholder="새 카테고리 이름 입력" style="display: none;">
                     </div>
@@ -1379,14 +1379,9 @@
                             </div>
                             <h2 class="text-2xl font-bold text-wedding-pink-dark">준비 목록</h2>
                         </div>
-                        <div class="flex space-x-2">
-                            <button onclick="openCategoryModal()" class="btn-secondary text-sm">
-                                <i class="fas fa-folder-plus mr-1"></i>카테고리
-                            </button>
-                            <button onclick="openModal('checklist', 'add')" class="btn-primary text-sm">
-                                <i class="fas fa-plus mr-1"></i>추가
-                            </button>
-                        </div>
+                        <button onclick="openModal('checklist', 'add')" class="btn-primary text-sm">
+                            <i class="fas fa-plus mr-1"></i>추가
+                        </button>
                     </div>
                     <div id="checklist-container"></div>
                 </div>`;
@@ -1525,8 +1520,7 @@
                 }
             });
 
-            // 카테고리별로 그룹화
-            const categoryOrder = ['웨딩홀', '예단, 예물', '신혼여행', '기타'];
+            // 카테고리별로 그룹화 (기존 데이터 유지)
             const grouped = items.reduce((acc, item) => {
                 const key = item.category || '기타';
                 if (!acc[key]) acc[key] = [];
@@ -1534,38 +1528,49 @@
                 return acc;
             }, {});
 
-            // 카테고리별로 렌더링
+            // 카테고리별로 렌더링 (동적으로 카테고리 순서 결정)
+            const categoryOrder = Object.keys(grouped).sort((a, b) => {
+                // 기존 카테고리 우선순위 유지
+                const priorityOrder = ['웨딩홀', '예단, 예물', '신혼여행', '기타'];
+                const aIndex = priorityOrder.indexOf(a);
+                const bIndex = priorityOrder.indexOf(b);
+                
+                if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+                if (aIndex !== -1) return -1;
+                if (bIndex !== -1) return 1;
+                return a.localeCompare(b);
+            });
+
             categoryOrder.forEach(category => {
-                if (grouped[category]) {
-                    const categoryItems = grouped[category];
-                    const categoryTotalEstimated = categoryItems.reduce((sum, item) => sum + (item.estimatedAmount || 0), 0);
-                    const categoryTotalActual = categoryItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
-                    
-                    // 카테고리 헤더
-                    const categoryHeader = document.createElement('div');
-                    categoryHeader.className = 'bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-200';
-                    categoryHeader.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <span class="text-2xl mr-3">${categoryIcons[category] || '📝'}</span>
-                                <div>
-                                    <h3 class="font-bold text-blue-800 text-lg">${category}</h3>
-                                    <p class="text-sm text-blue-600">${categoryItems.length}개 항목</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm text-blue-600">예상: ${formatNumberWithCommas(categoryTotalEstimated)}원</p>
-                                <p class="font-bold text-blue-800">실제: ${formatNumberWithCommas(categoryTotalActual)}원</p>
+                const categoryItems = grouped[category];
+                const categoryTotalEstimated = categoryItems.reduce((sum, item) => sum + (item.estimatedAmount || 0), 0);
+                const categoryTotalActual = categoryItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+                
+                // 카테고리 헤더
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-200';
+                categoryHeader.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="text-2xl mr-3">${categoryIcons[category] || '📝'}</span>
+                            <div>
+                                <h3 class="font-bold text-blue-800 text-lg">${category}</h3>
+                                <p class="text-sm text-blue-600">${categoryItems.length}개 항목</p>
                             </div>
                         </div>
-                    `;
-                    list.appendChild(categoryHeader);
+                        <div class="text-right">
+                            <p class="text-sm text-blue-600">예상: ${formatNumberWithCommas(categoryTotalEstimated)}원</p>
+                            <p class="font-bold text-blue-800">실제: ${formatNumberWithCommas(categoryTotalActual)}원</p>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(categoryHeader);
 
-                    // 카테고리 내 항목들
-                    const itemsContainer = document.createElement('div');
-                    itemsContainer.className = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mt-4';
+                // 카테고리 내 항목들
+                const itemsContainer = document.createElement('div');
+                itemsContainer.className = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mt-4';
 
-                    categoryItems.forEach(item => {
+                categoryItems.forEach(item => {
                 const { estimatedAmount: estimated = 0, totalAmount: actual = 0, deposit = 0 } = item;
                 const balance = actual - deposit;
                 const paymentProgress = actual > 0 ? (deposit / actual * 100) : 0;
