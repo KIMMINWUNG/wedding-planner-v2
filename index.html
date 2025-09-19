@@ -14,6 +14,9 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0idXJsKCNncmFkaWVudCkiLz4KPHBhdGggZD0iTTE2IDEwQzE5LjMxIDEwIDIyIDEyLjY5IDIyIDE2QzIyIDE5LjMxIDE5LjMxIDIyIDE2IDIyQzEyLjY5IDIyIDEwIDE5LjMxIDEwIDE2QzEwIDEyLjY5IDEyLjY5IDEwIDE2IDEwWiIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC45NSIvPgo8cGF0aCBkPSJNMjIgMTZIMjRWMThIMjJWMTZaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIwLjk1Ii8+CjxwYXRoIGQ9Ik04IDE2SDEwVjE4SDhWMTZaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIwLjk1Ii8+CjxwYXRoIGQ9Ik0xNiAyNEMxMi42OSAyNCAxMCAyMS4zMSAxMCAxOEgxMkMxMiAxOS4xIDEyLjkgMjAgMTQgMjBIMThDMTkuMSAyMCAyMCAxOS4xIDIwIDE4SDIyQzIyIDIxLjMxIDE5LjMxIDI0IDE2IDI0WiIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC45NSIvPgo8Y2lyY2xlIGN4PSIxNiIgY3k9IjE0IiByPSIyIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLW9wYWNpdHk9IjAuOCIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudCIgeDE9IjAiIHkxPSIwIiB4Mj0iMzIiIHkyPSIzMiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBzdG9wLWNvbG9yPSIjRDk4QkEwIi8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI0U2QzhGRiIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo=">
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -1940,6 +1943,64 @@
             });
             container.appendChild(grid);
         }
+
+        // PWA Service Worker 등록
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                        
+                        // 업데이트 확인
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // 새 버전이 설치되었을 때 알림
+                                    if (confirm('새 버전이 사용 가능합니다. 지금 업데이트하시겠습니까?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // PWA 설치 프롬프트
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // 설치 버튼 표시 (선택사항)
+            const installButton = document.createElement('button');
+            installButton.textContent = '앱 설치';
+            installButton.className = 'fixed bottom-4 right-4 bg-wedding-pink text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            installButton.addEventListener('click', () => {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('사용자가 PWA 설치를 수락했습니다');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+            document.body.appendChild(installButton);
+        });
+
+        // PWA 설치 완료 이벤트
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('PWA가 성공적으로 설치되었습니다');
+            // 설치 버튼 제거
+            const installButton = document.querySelector('button[class*="fixed bottom-4 right-4"]');
+            if (installButton) {
+                installButton.remove();
+            }
+        });
     </script>
 </body>
 </html>
