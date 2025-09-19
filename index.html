@@ -299,6 +299,7 @@
         
         input[type=number] {
             -moz-appearance: textfield;
+            appearance: textfield;
         }
 
         /* Enhanced accordion styling */
@@ -307,9 +308,10 @@
             transition: all 0.3s ease;
             border-radius: var(--border-radius-sm);
             padding: 16px;
-            background: linear-gradient(135deg, white, var(--wedding-pink-light));
-            border: 1px solid rgba(217, 139, 160, 0.2);
+            background: linear-gradient(135deg, #F0F9FF, #E0F2FE);
+            border: 1px solid rgba(56, 189, 248, 0.2);
             margin-bottom: 8px;
+            color: #0369A1;
         }
         
         details > summary::-webkit-details-marker { 
@@ -322,7 +324,7 @@
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             margin-left: auto;
             font-size: 18px;
-            color: var(--wedding-pink);
+            color: #0369A1;
         }
         
         details[open] > summary.guest-summary::after { 
@@ -330,8 +332,8 @@
         }
 
         details > summary:hover {
-            background: linear-gradient(135deg, var(--wedding-pink-light), white);
-            box-shadow: var(--shadow-soft);
+            background: linear-gradient(135deg, #E0F2FE, #F0F9FF);
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15);
         }
 
         /* D-Day counter enhancement */
@@ -741,7 +743,10 @@
                         <select id="checklistItemCategorySelect" class="form-input w-full mb-2">
                             <option value="">-- 새 카테고리 만들기 --</option>
                         </select>
-                        <input type="text" id="checklistItemCategory" value="${item.category || ''}" class="form-input w-full" placeholder="새 카테고리 이름 입력" style="display: none;">
+                        <div id="newCategoryContainer" class="hidden">
+                            <input type="text" id="checklistItemCategory" value="${item.category || ''}" class="form-input w-full" placeholder="새 카테고리 이름 입력">
+                            <p class="text-xs text-gray-500 mt-1">새로운 카테고리를 만들어보세요!</p>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -794,18 +799,19 @@
                             categorySelect.value = item.category;
                         } else {
                             categorySelect.value = '';
-                            categoryInput.style.display = 'block';
+                            document.getElementById('newCategoryContainer').classList.remove('hidden');
                             categoryInput.value = item.category;
                         }
                     }
                     
                     // 카테고리 선택 이벤트
                     categorySelect.addEventListener('change', (e) => {
+                        const newCategoryContainer = document.getElementById('newCategoryContainer');
                         if (e.target.value === '') {
-                            categoryInput.style.display = 'block';
+                            newCategoryContainer.classList.remove('hidden');
                             categoryInput.focus();
                         } else {
-                            categoryInput.style.display = 'none';
+                            newCategoryContainer.classList.add('hidden');
                             categoryInput.value = e.target.value;
                             
                             // 해당 카테고리의 중분류 업데이트
@@ -880,12 +886,12 @@
                         <label class="block text-sm font-semibold text-blue-700 mb-3">
                             <i class="fas fa-calculator mr-2"></i>예상 금액
                         </label>
-                        <div class="flex items-center bg-white rounded-lg border-2 border-blue-200">
-                            <button type="button" onclick="adjustBudget('budgetEstimated', -10000)" class="px-4 py-3 text-blue-600 hover:bg-blue-50 rounded-l-lg transition-colors">
+                        <div class="flex items-center bg-white rounded-lg border-2 border-blue-200 max-w-full">
+                            <button type="button" onclick="adjustBudget('budgetEstimated', -10000)" class="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-l-lg transition-colors text-sm">
                                 <i class="fas fa-minus"></i>
                             </button>
-                            <input type="text" inputmode="numeric" id="budgetEstimated" value="${formatNumberWithCommas(item.estimatedAmount || '')}" oninput="handleNumberInput(event)" class="flex-1 p-3 text-center font-semibold border-0 focus:outline-none" placeholder="0">
-                            <button type="button" onclick="adjustBudget('budgetEstimated', 10000)" class="px-4 py-3 text-blue-600 hover:bg-blue-50 rounded-r-lg transition-colors">
+                            <input type="text" inputmode="numeric" id="budgetEstimated" value="${formatNumberWithCommas(item.estimatedAmount || '')}" oninput="handleNumberInput(event)" class="flex-1 p-2 text-center text-sm font-semibold border-0 focus:outline-none min-w-0" placeholder="0">
+                            <button type="button" onclick="adjustBudget('budgetEstimated', 10000)" class="px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-r-lg transition-colors text-sm">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
@@ -1505,14 +1511,14 @@
                 <div class="card-enhanced p-6 bg-gradient-to-br from-wedding-pink-light to-white">
                     <div class="text-center mb-4">
                         <h3 class="text-xl font-bold text-wedding-pink-dark mb-2">💰 전체 예산 현황</h3>
-                        <div class="grid grid-cols-2 gap-4 text-center">
-                            <div class="bg-white/60 rounded-lg p-3">
+                        <div class="flex justify-center items-center gap-6 text-center">
+                            <div class="bg-white/60 rounded-lg p-3 min-w-0 flex-1">
                                 <p class="text-xs text-gray-500">총 예상</p>
-                                <p class="font-bold text-lg text-gray-700">${formatNumberWithCommas(totals.all.estimated)}원</p>
+                                <p class="font-bold text-lg text-gray-700 truncate">${formatNumberWithCommas(totals.all.estimated)}원</p>
                             </div>
-                            <div class="bg-white/60 rounded-lg p-3">
+                            <div class="bg-white/60 rounded-lg p-3 min-w-0 flex-1">
                                 <p class="text-xs text-gray-500">총 지출</p>
-                                <p class="font-bold text-lg text-wedding-pink-dark">${formatNumberWithCommas(totals.all.actual)}원</p>
+                                <p class="font-bold text-lg text-wedding-pink-dark truncate">${formatNumberWithCommas(totals.all.actual)}원</p>
                             </div>
                         </div>
                     </div>
@@ -1521,16 +1527,16 @@
                         <summary class="text-center text-sm text-gray-600 hover:text-wedding-pink-dark transition-colors">
                             👫 개별 부담 현황 보기 ▼
                         </summary>
-                        <div class="mt-4 grid grid-cols-2 gap-3">
-                            <div class="bg-sky-50 rounded-lg p-3 text-center">
+                        <div class="mt-4 flex gap-3">
+                            <div class="bg-sky-50 rounded-lg p-3 text-center flex-1 min-w-0">
                                 <p class="font-semibold text-sky-700 mb-1">🤵 민웅</p>
-                                <p class="text-xs text-gray-600">예상: ${formatNumberWithCommas(totals.groom.estimated)}원</p>
-                                <p class="text-sm font-bold text-sky-700">지출: ${formatNumberWithCommas(totals.groom.actual)}원</p>
+                                <p class="text-xs text-gray-600 truncate">예상: ${formatNumberWithCommas(totals.groom.estimated)}원</p>
+                                <p class="text-sm font-bold text-sky-700 truncate">지출: ${formatNumberWithCommas(totals.groom.actual)}원</p>
                             </div>
-                            <div class="bg-rose-50 rounded-lg p-3 text-center">
+                            <div class="bg-rose-50 rounded-lg p-3 text-center flex-1 min-w-0">
                                 <p class="font-semibold text-rose-600 mb-1">👰 지은</p>
-                                <p class="text-xs text-gray-600">예상: ${formatNumberWithCommas(totals.bride.estimated)}원</p>
-                                <p class="text-sm font-bold text-rose-600">지출: ${formatNumberWithCommas(totals.bride.actual)}원</p>
+                                <p class="text-xs text-gray-600 truncate">예상: ${formatNumberWithCommas(totals.bride.estimated)}원</p>
+                                <p class="text-sm font-bold text-rose-600 truncate">지출: ${formatNumberWithCommas(totals.bride.actual)}원</p>
                             </div>
                         </div>
                     </details>
@@ -1653,7 +1659,7 @@
                 const sideContainer = containerMap[side];
                 const sideGuests = groupedBySide[side];
                 const sideTitle = side === 'groom' ? `🤵 민웅측 (${sideGuests.length}명)` : `👰 지은측 (${sideGuests.length}명)`;
-                const sideColor = side === 'groom' ? 'text-sky-600' : 'text-rose-500';
+                const sideColor = side === 'groom' ? 'text-blue-600' : 'text-teal-600';
 
                 const sideDetails = document.createElement('details');
                 sideDetails.innerHTML = `<summary class="text-lg font-semibold mb-2 ${sideColor} cursor-pointer flex justify-between items-center guest-summary"><h3>${sideTitle}</h3></summary>`;
@@ -1710,21 +1716,21 @@
             
             let title = '우리의 추억';
             let titleIcon = '<i class="fas fa-images text-purple-500 mr-3"></i>';
-            let buttons = `<button onclick="enterDeleteMode()" class="btn-secondary text-sm"><i class="fas fa-trash-alt mr-2"></i>삭제</button>
-                           <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="btn-primary text-sm ml-2"><i class="fas fa-upload mr-2"></i>사진 올리기</button>`;
+            let buttons = `<button onclick="enterDeleteMode()" class="btn-secondary text-sm p-3"><i class="fas fa-trash-alt"></i></button>
+                           <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="btn-primary text-sm ml-2 p-3"><i class="fas fa-upload"></i></button>`;
 
             if (isDeleteSelectionMode) {
                 const selectedCount = photosSelectedForDeletion.size;
                 title = `${selectedCount}개 사진 선택됨`;
                 titleIcon = '<i class="fas fa-check-circle text-red-500 mr-3"></i>';
-                buttons = `<button onclick="exitDeleteMode(true)" class="btn-secondary text-sm">취소</button>
-                           <button onclick="deleteSelectedPhotos()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:transform hover:scale-105 shadow-lg text-sm ml-2 ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${selectedCount === 0 ? 'disabled' : ''}><i class="fas fa-trash-alt mr-2"></i>선택 삭제</button>`;
+                buttons = `<button onclick="exitDeleteMode(true)" class="btn-secondary text-sm p-3"><i class="fas fa-times"></i></button>
+                           <button onclick="deleteSelectedPhotos()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 hover:transform hover:scale-105 shadow-lg text-sm ml-2 ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${selectedCount === 0 ? 'disabled' : ''}><i class="fas fa-trash-alt"></i></button>`;
             } else if (photoViewMode === 'single_folder') {
                 title = currentFolderName;
                 titleIcon = '<i class="fas fa-folder-open text-purple-500 mr-3"></i>';
-                buttons = `<button onclick="navigateBackToFolders(true)" class="btn-secondary text-sm"><i class="fas fa-arrow-left mr-2"></i>뒤로</button>
-                           <button onclick="enterDeleteMode()" class="btn-secondary text-sm ml-2"><i class="fas fa-trash-alt mr-2"></i>삭제</button>
-                           <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="btn-primary text-sm ml-2"><i class="fas fa-upload mr-2"></i>사진 올리기</button>`;
+                buttons = `<button onclick="navigateBackToFolders(true)" class="btn-secondary text-sm p-3"><i class="fas fa-arrow-left"></i></button>
+                           <button onclick="enterDeleteMode()" class="btn-secondary text-sm ml-2 p-3"><i class="fas fa-trash-alt"></i></button>
+                           <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="btn-primary text-sm ml-2 p-3"><i class="fas fa-upload"></i></button>`;
             }
 
             header.innerHTML = `
