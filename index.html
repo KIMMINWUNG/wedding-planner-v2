@@ -307,9 +307,10 @@
             transition: all 0.3s ease;
             border-radius: var(--border-radius-sm);
             padding: 16px;
-            background: linear-gradient(135deg, white, var(--wedding-pink-light));
-            border: 1px solid rgba(217, 139, 160, 0.2);
+            background: linear-gradient(135deg, #F0F9FF, #E0F2FE);
+            border: 1px solid rgba(56, 189, 248, 0.2);
             margin-bottom: 8px;
+            color: #0369A1;
         }
         
         details > summary::-webkit-details-marker { 
@@ -322,7 +323,7 @@
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             margin-left: auto;
             font-size: 18px;
-            color: var(--wedding-pink);
+            color: #0369A1;
         }
         
         details[open] > summary.guest-summary::after { 
@@ -330,8 +331,8 @@
         }
 
         details > summary:hover {
-            background: linear-gradient(135deg, var(--wedding-pink-light), white);
-            box-shadow: var(--shadow-soft);
+            background: linear-gradient(135deg, #E0F2FE, #F0F9FF);
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15);
         }
 
         /* D-Day counter enhancement */
@@ -435,7 +436,7 @@
             <!-- Header -->
             <header class="text-center mb-8">
                 <div class="mb-6">
-                    <h1 class="font-handwriting text-4xl md:text-5xl font-bold mb-3" style="line-height: 1.2;">Minwung & Jieun</h1>
+                    <h1 class="font-handwriting text-3xl md:text-4xl font-bold mb-2" style="line-height: 1.2;">Minwung & Jieun</h1>
                     <p class="text-base md:text-lg text-gray-600 mb-4">우리가 함께 만드는 결혼 이야기</p>
                     <div class="flex items-center justify-center space-x-2">
                         <div class="w-8 h-0.5 bg-gradient-to-r from-transparent to-wedding-pink rounded-full"></div>
@@ -522,6 +523,49 @@
                     </button>
                     <button id="confirm-ok" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:transform hover:scale-105 shadow-lg">
                         <i class="fas fa-check mr-2"></i>확인
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Creation Modal -->
+        <div id="categoryModal" class="modal-backdrop hidden">
+            <div class="modal-content">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-wedding-pink-dark">
+                        <i class="fas fa-folder-plus mr-2"></i>새 카테고리 만들기
+                    </h3>
+                    <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="category-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-tag mr-2 text-wedding-pink"></i>카테고리 이름
+                        </label>
+                        <input type="text" id="categoryName" class="form-input w-full" placeholder="예: 스튜디오, 신혼여행, 웨딩홀" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-palette mr-2 text-wedding-pink"></i>카테고리 색상 (선택)
+                        </label>
+                        <div class="grid grid-cols-6 gap-2">
+                            <button type="button" class="w-8 h-8 rounded-full bg-blue-400 border-2 border-transparent hover:border-gray-400 category-color" data-color="blue-400"></button>
+                            <button type="button" class="w-8 h-8 rounded-full bg-green-400 border-2 border-transparent hover:border-gray-400 category-color" data-color="green-400"></button>
+                            <button type="button" class="w-8 h-8 rounded-full bg-purple-400 border-2 border-transparent hover:border-gray-400 category-color" data-color="purple-400"></button>
+                            <button type="button" class="w-8 h-8 rounded-full bg-pink-400 border-2 border-transparent hover:border-gray-400 category-color" data-color="pink-400"></button>
+                            <button type="button" class="w-8 h-8 rounded-full bg-yellow-400 border-2 border-transparent hover:border-gray-400 category-color" data-color="yellow-400"></button>
+                            <button type="button" class="w-8 h-8 rounded-full bg-indigo-400 border-2 border-transparent hover:border-gray-400 category-color" data-color="indigo-400"></button>
+                        </div>
+                    </div>
+                </form>
+                <div class="flex justify-end mt-8 space-x-3">
+                    <button onclick="closeCategoryModal()" class="btn-secondary">
+                        <i class="fas fa-times mr-2"></i>취소
+                    </button>
+                    <button onclick="createCategory()" class="btn-primary">
+                        <i class="fas fa-plus mr-2"></i>생성
                     </button>
                 </div>
             </div>
@@ -974,6 +1018,71 @@
         };
         window.closeModal = () => document.getElementById('itemModal').classList.add('hidden');
 
+        // 카테고리 모달 관련 함수들
+        window.openCategoryModal = () => {
+            document.getElementById('categoryModal').classList.remove('hidden');
+            document.getElementById('categoryName').focus();
+        };
+
+        window.closeCategoryModal = () => {
+            document.getElementById('categoryModal').classList.add('hidden');
+            document.getElementById('categoryName').value = '';
+            document.querySelectorAll('.category-color').forEach(btn => {
+                btn.classList.remove('border-wedding-pink', 'border-2');
+                btn.classList.add('border-transparent');
+            });
+        };
+
+        window.createCategory = () => {
+            const categoryName = document.getElementById('categoryName').value.trim();
+            const selectedColor = document.querySelector('.category-color.border-wedding-pink')?.dataset.color || 'blue-400';
+            
+            if (!categoryName) {
+                alert('카테고리 이름을 입력해주세요.');
+                return;
+            }
+
+            // 기존 카테고리와 중복 확인
+            const existingCategories = [...new Set(allChecklistItems.map(item => item.category).filter(Boolean))];
+            if (existingCategories.includes(categoryName)) {
+                alert('이미 존재하는 카테고리입니다.');
+                return;
+            }
+
+            // 카테고리 생성 (실제로는 체크리스트 아이템으로 저장)
+            if (db && userId) {
+                addDoc(collection(db, `artifacts/${appId}/public/data/categories`), {
+                    name: categoryName,
+                    color: selectedColor,
+                    createdAt: new Date(),
+                    type: 'category'
+                }).then(() => {
+                    closeCategoryModal();
+                    // 체크리스트 리렌더링
+                    renderActiveTab();
+                }).catch(error => {
+                    console.error('카테고리 생성 실패:', error);
+                    alert('카테고리 생성에 실패했습니다.');
+                });
+            } else {
+                alert('데이터베이스 연결이 필요합니다.');
+            }
+        };
+
+        // 색상 선택 이벤트
+        document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('category-color')) {
+                    document.querySelectorAll('.category-color').forEach(btn => {
+                        btn.classList.remove('border-wedding-pink', 'border-2');
+                        btn.classList.add('border-transparent');
+                    });
+                    e.target.classList.remove('border-transparent');
+                    e.target.classList.add('border-wedding-pink', 'border-2');
+                }
+            });
+        });
+
         window.adjustBudget = (inputId, amount) => {
             const input = document.getElementById(inputId);
             if (input) { 
@@ -1260,9 +1369,14 @@
                             </div>
                             <h2 class="text-2xl font-bold text-wedding-pink-dark">준비 목록</h2>
                         </div>
-                        <button onclick="openModal('checklist', 'add')" class="btn-primary text-sm">
-                            <i class="fas fa-plus mr-2"></i>추가
-                        </button>
+                        <div class="flex space-x-2">
+                            <button onclick="openCategoryModal()" class="btn-secondary text-sm">
+                                <i class="fas fa-folder-plus mr-1"></i>카테고리
+                            </button>
+                            <button onclick="openModal('checklist', 'add')" class="btn-primary text-sm">
+                                <i class="fas fa-plus mr-1"></i>추가
+                            </button>
+                        </div>
                     </div>
                     <div id="checklist-container"></div>
                 </div>`;
@@ -1359,7 +1473,7 @@
             if (!list || !grandTotalDiv) return;
 
             list.innerHTML = '';
-            list.className = 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3';
+            list.className = 'space-y-6';
             
             const totals = {
                 all: { estimated: 0, actual: 0 },
@@ -1388,8 +1502,47 @@
                 }
             });
 
-            // 각 항목을 개별 카드로 렌더링
-            items.forEach(item => {
+            // 카테고리별로 그룹화
+            const categoryOrder = ['웨딩홀', '예단, 예물', '신혼여행', '기타'];
+            const grouped = items.reduce((acc, item) => {
+                const key = item.category || '기타';
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(item);
+                return acc;
+            }, {});
+
+            // 카테고리별로 렌더링
+            categoryOrder.forEach(category => {
+                if (grouped[category]) {
+                    const categoryItems = grouped[category];
+                    const categoryTotalEstimated = categoryItems.reduce((sum, item) => sum + (item.estimatedAmount || 0), 0);
+                    const categoryTotalActual = categoryItems.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+                    
+                    // 카테고리 헤더
+                    const categoryHeader = document.createElement('div');
+                    categoryHeader.className = 'bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-200';
+                    categoryHeader.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">${categoryIcons[category] || '📝'}</span>
+                                <div>
+                                    <h3 class="font-bold text-blue-800 text-lg">${category}</h3>
+                                    <p class="text-sm text-blue-600">${categoryItems.length}개 항목</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-blue-600">예상: ${formatNumberWithCommas(categoryTotalEstimated)}원</p>
+                                <p class="font-bold text-blue-800">실제: ${formatNumberWithCommas(categoryTotalActual)}원</p>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(categoryHeader);
+
+                    // 카테고리 내 항목들
+                    const itemsContainer = document.createElement('div');
+                    itemsContainer.className = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mt-4';
+
+                    categoryItems.forEach(item => {
                 const { estimatedAmount: estimated = 0, totalAmount: actual = 0, deposit = 0 } = item;
                 const balance = actual - deposit;
                 const paymentProgress = actual > 0 ? (deposit / actual * 100) : 0;
@@ -1428,8 +1581,8 @@
                 };
                 
                 const payerBadge = { 
-                    groom: 'bg-sky-100 text-sky-800', 
-                    bride: 'bg-rose-100 text-rose-800', 
+                    groom: 'bg-blue-100 text-blue-800', 
+                    bride: 'bg-teal-100 text-teal-800', 
                     joint: 'bg-green-100 text-green-800'
                 }[item.payer] || 'bg-green-100 text-green-800';
                 
@@ -1496,8 +1649,12 @@
                         <span class="font-medium text-sm">${statusText}</span>
                     </div>
                 `;
-                
-                list.appendChild(card);
+                        
+                        itemsContainer.appendChild(card);
+                    });
+                    
+                    list.appendChild(itemsContainer);
+                }
             });
 
             // 전체 통계 카드도 개선
@@ -1522,15 +1679,15 @@
                             👫 개별 부담 현황 보기 ▼
                         </summary>
                         <div class="mt-4 grid grid-cols-2 gap-3">
-                            <div class="bg-sky-50 rounded-lg p-3 text-center">
-                                <p class="font-semibold text-sky-700 mb-1">🤵 민웅</p>
+                            <div class="bg-blue-50 rounded-lg p-3 text-center">
+                                <p class="font-semibold text-blue-700 mb-1">🤵 민웅</p>
                                 <p class="text-xs text-gray-600">예상: ${formatNumberWithCommas(totals.groom.estimated)}원</p>
-                                <p class="text-sm font-bold text-sky-700">지출: ${formatNumberWithCommas(totals.groom.actual)}원</p>
+                                <p class="text-sm font-bold text-blue-700">지출: ${formatNumberWithCommas(totals.groom.actual)}원</p>
                             </div>
-                            <div class="bg-rose-50 rounded-lg p-3 text-center">
-                                <p class="font-semibold text-rose-600 mb-1">👰 지은</p>
+                            <div class="bg-teal-50 rounded-lg p-3 text-center">
+                                <p class="font-semibold text-teal-600 mb-1">👰 지은</p>
                                 <p class="text-xs text-gray-600">예상: ${formatNumberWithCommas(totals.bride.estimated)}원</p>
-                                <p class="text-sm font-bold text-rose-600">지출: ${formatNumberWithCommas(totals.bride.actual)}원</p>
+                                <p class="text-sm font-bold text-teal-600">지출: ${formatNumberWithCommas(totals.bride.actual)}원</p>
                             </div>
                         </div>
                     </details>
@@ -1653,7 +1810,7 @@
                 const sideContainer = containerMap[side];
                 const sideGuests = groupedBySide[side];
                 const sideTitle = side === 'groom' ? `🤵 민웅측 (${sideGuests.length}명)` : `👰 지은측 (${sideGuests.length}명)`;
-                const sideColor = side === 'groom' ? 'text-sky-600' : 'text-rose-500';
+                const sideColor = side === 'groom' ? 'text-blue-600' : 'text-teal-600';
 
                 const sideDetails = document.createElement('details');
                 sideDetails.innerHTML = `<summary class="text-lg font-semibold mb-2 ${sideColor} cursor-pointer flex justify-between items-center guest-summary"><h3>${sideTitle}</h3></summary>`;
@@ -1710,21 +1867,21 @@
             
             let title = '우리의 추억';
             let titleIcon = '<i class="fas fa-images text-purple-500 mr-3"></i>';
-            let buttons = `<button onclick="enterDeleteMode()" class="btn-secondary text-sm"><i class="fas fa-trash-alt mr-2"></i>삭제</button>
-                           <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="btn-primary text-sm ml-2"><i class="fas fa-upload mr-2"></i>사진 올리기</button>`;
+            let buttons = `<button onclick="enterDeleteMode()" class="btn-secondary text-sm p-3"><i class="fas fa-trash-alt"></i></button>
+                           <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="btn-primary text-sm ml-2 p-3"><i class="fas fa-upload"></i></button>`;
 
             if (isDeleteSelectionMode) {
                 const selectedCount = photosSelectedForDeletion.size;
                 title = `${selectedCount}개 사진 선택됨`;
                 titleIcon = '<i class="fas fa-check-circle text-red-500 mr-3"></i>';
-                buttons = `<button onclick="exitDeleteMode(true)" class="btn-secondary text-sm">취소</button>
-                           <button onclick="deleteSelectedPhotos()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:transform hover:scale-105 shadow-lg text-sm ml-2 ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${selectedCount === 0 ? 'disabled' : ''}><i class="fas fa-trash-alt mr-2"></i>선택 삭제</button>`;
+                buttons = `<button onclick="exitDeleteMode(true)" class="btn-secondary text-sm p-3"><i class="fas fa-times"></i></button>
+                           <button onclick="deleteSelectedPhotos()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 hover:transform hover:scale-105 shadow-lg text-sm ml-2 ${selectedCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${selectedCount === 0 ? 'disabled' : ''}><i class="fas fa-trash-alt"></i></button>`;
             } else if (photoViewMode === 'single_folder') {
                 title = currentFolderName;
                 titleIcon = '<i class="fas fa-folder-open text-purple-500 mr-3"></i>';
-                buttons = `<button onclick="navigateBackToFolders(true)" class="btn-secondary text-sm"><i class="fas fa-arrow-left mr-2"></i>뒤로</button>
-                           <button onclick="enterDeleteMode()" class="btn-secondary text-sm ml-2"><i class="fas fa-trash-alt mr-2"></i>삭제</button>
-                           <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="btn-primary text-sm ml-2"><i class="fas fa-upload mr-2"></i>사진 올리기</button>`;
+                buttons = `<button onclick="navigateBackToFolders(true)" class="btn-secondary text-sm p-3"><i class="fas fa-arrow-left"></i></button>
+                           <button onclick="enterDeleteMode()" class="btn-secondary text-sm ml-2 p-3"><i class="fas fa-trash-alt"></i></button>
+                           <button id="add-photo-btn" onclick="openModal('photo', 'add')" class="btn-primary text-sm ml-2 p-3"><i class="fas fa-upload"></i></button>`;
             }
 
             header.innerHTML = `
@@ -1846,7 +2003,13 @@
 
                 const photoPreviews = photosInFolder.slice(0, 3).map(photo => 
                     `<div class="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                        <img src="${photo.url}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x400/FFFBF7/D98BA0?text=Error';">
+                        <img src="${photo.url}" 
+                             class="w-full h-full object-cover" 
+                             loading="lazy" 
+                             decoding="async"
+                             style="transition: opacity 0.3s ease;"
+                             onload="this.style.opacity='1'"
+                             onerror="this.onerror=null;this.src='https://placehold.co/400x400/FFFBF7/D98BA0?text=Error';this.style.opacity='1'">
                     </div>`
                 ).join('');
 
@@ -1876,7 +2039,13 @@
                 photoWrapper.className = "relative aspect-square bg-gray-100 rounded-lg overflow-hidden group cursor-pointer";
                 photoWrapper.dataset.photoId = photo.id;
                 
-                photoWrapper.innerHTML = `<img src="${photo.url}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/400x400/FFFBF7/D98BA0?text=Error';">`;
+                photoWrapper.innerHTML = `<img src="${photo.url}" 
+                                               class="w-full h-full object-cover" 
+                                               loading="lazy" 
+                                               decoding="async"
+                                               style="transition: opacity 0.3s ease;"
+                                               onload="this.style.opacity='1'"
+                                               onerror="this.onerror=null;this.src='https://placehold.co/400x400/FFFBF7/D98BA0?text=Error';this.style.opacity='1'">`;
                 
                 if (isDeleteSelectionMode && photosSelectedForDeletion.has(photo.id)) {
                     const overlay = document.createElement('div');
