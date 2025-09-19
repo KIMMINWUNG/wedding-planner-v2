@@ -572,8 +572,13 @@
         let isDeleteSelectionMode = false;
         let photosSelectedForDeletion = new Set();
 
+        // ========================================
+        // 🛠️ 유틸리티 함수들
+        // ========================================
+        
         const formatNumberWithCommas = (number) => number?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") || '';
         const parseFormattedNumber = (str) => parseInt(String(str).replace(/,/g, ''), 10) || 0;
+        
         window.handleNumberInput = (e) => {
             const input = e.target;
             input.value = formatNumberWithCommas(parseFormattedNumber(input.value));
@@ -596,6 +601,10 @@
             }
         }
 
+        // ========================================
+        // 🔥 Firebase 관련 함수들
+        // ========================================
+        
         async function initializeFirebase() {
             if (isFirebaseInitialized) return;
             if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
@@ -668,6 +677,10 @@
             }
         }
 
+        // ========================================
+        // 📑 탭 관련 함수들
+        // ========================================
+        
         window.changeTab = (tabName) => {
             if (photoViewMode !== 'folders' || isDeleteSelectionMode) {
                 exitDeleteMode(false);
@@ -719,6 +732,10 @@
             newEntry.querySelector('input').focus();
         };
 
+        // ========================================
+        // 🪟 모달 관련 함수들
+        // ========================================
+        
         window.openModal = (type, mode, item = {}) => {
             currentModal = { type, mode, item };
             const modal = document.getElementById('itemModal');
@@ -1193,8 +1210,17 @@
             });
         };
         
-        window.editBudgetItem = (id) => { const item = allBudgetItems.find(i => i.id === id); if(item) openModal('budget', 'edit', item); };
-        window.editGuestItem = (id) => { const item = allGuests.find(i => i.id === id); if(item) openModal('guest', 'edit', item); };
+        // 통합된 편집 함수
+        window.editItem = (type, id) => {
+            let item = null;
+            if (type === 'budget') item = allBudgetItems.find(i => i.id === id);
+            else if (type === 'guest') item = allGuests.find(i => i.id === id);
+            if (item) openModal(type, 'edit', item);
+        };
+        
+        // 기존 함수들 호환성 유지
+        window.editBudgetItem = (id) => editItem('budget', id);
+        window.editGuestItem = (id) => editItem('guest', id);
         
         const lightbox = document.getElementById('lightbox');
         let touchStartX = 0;
@@ -1205,6 +1231,10 @@
             else if (touchEndX - startX > 50) { showPrevPhoto(); }
         };
 
+        // ========================================
+        // 🖼️ 라이트박스 관련 함수들
+        // ========================================
+        
         window.openLightbox = (index) => {
             if (isDeleteSelectionMode) return;
             
@@ -1228,28 +1258,29 @@
             lightbox.removeEventListener('touchend', handleTouchEnd);
         };
         
-        const updateLightboxImage = () => {
-             const currentVisiblePhotos = (photoViewMode === 'single_folder' && currentFolderName)
+        // 라이트박스 헬퍼 함수
+        const getCurrentVisiblePhotos = () => {
+            return (photoViewMode === 'single_folder' && currentFolderName)
                 ? allPhotos.filter(p => (p.folderName || '기타') === currentFolderName)
                 : allPhotos;
+        };
+
+        const updateLightboxImage = () => {
+            const currentVisiblePhotos = getCurrentVisiblePhotos();
             if (currentVisiblePhotos.length > 0) {
-                 document.getElementById('lightbox-img').src = currentVisiblePhotos[currentPhotoIndex].url;
+                document.getElementById('lightbox-img').src = currentVisiblePhotos[currentPhotoIndex].url;
             }
-        }
+        };
 
         window.showNextPhoto = () => {
-            const currentVisiblePhotos = (photoViewMode === 'single_folder' && currentFolderName)
-                ? allPhotos.filter(p => (p.folderName || '기타') === currentFolderName)
-                : allPhotos;
+            const currentVisiblePhotos = getCurrentVisiblePhotos();
             if (currentVisiblePhotos.length === 0) return;
             currentPhotoIndex = (currentPhotoIndex + 1) % currentVisiblePhotos.length;
             updateLightboxImage();
         };
 
         window.showPrevPhoto = () => {
-            const currentVisiblePhotos = (photoViewMode === 'single_folder' && currentFolderName)
-                ? allPhotos.filter(p => (p.folderName || '기타') === currentFolderName)
-                : allPhotos;
+            const currentVisiblePhotos = getCurrentVisiblePhotos();
             if (currentVisiblePhotos.length === 0) return;
             currentPhotoIndex = (currentPhotoIndex - 1 + currentVisiblePhotos.length) % currentVisiblePhotos.length;
             updateLightboxImage();
@@ -1358,7 +1389,10 @@
             loadTabContent('checklist');
         });
 
-        // --- 렌더링 함수들 ---
+        // ========================================
+        // 🎨 렌더링 함수들
+        // ========================================
+        
         window.renderBudget = function(items) {
             const list = document.getElementById('budget-list');
             const grandTotalDiv = document.getElementById('grand-total');
@@ -1708,7 +1742,9 @@
             }
         };
 
-        // --- 사진첩 관련 함수들 ---
+        // ========================================
+        // 📸 사진첩 관련 함수들
+        // ========================================
         
         function updatePhotoHeader() {
             const header = document.getElementById('photo-header');
